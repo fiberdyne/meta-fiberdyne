@@ -1,0 +1,10 @@
++-----------------------------------------+
++          Fiberdyne DSP module           +
++-----------------------------------------+
+
+
+* This is the Fiberdyne DSP library built as a kernel module for the yocto 3.10 kernel. 
+
+* All source files are located in the common directory with a symbolic link to the actual DSP source code from ssh://git@alpha.fiberdyne.com.au:20122/internal/ampoem.git [branch:renesas_port]
+
+* Note that the build is using this file as aprt of license checksum generated. If this file is modified, the md5 checksum needs to be updated in the .bb file up a directory.
