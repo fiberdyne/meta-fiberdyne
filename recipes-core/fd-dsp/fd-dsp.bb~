@@ -1,11 +1,6 @@
-DESCRIPTION = "Fiberdyne DSP library"
-LICENSE = "Copyright Fiberdyne Systems Ptv Ltd"
-# dummy
+DESCRIPTION = "Fiberdyne DSP Applications"
+LICENSE = "CLOSED"
 LIC_FILES_CHKSUM = "file://README;md5=13a41cb73f4e89cc25f6d30a672cd576"
-
-#DEPENDS = ""
-
-inherit module
 
 PR = "r0"
 PV = "0.1"

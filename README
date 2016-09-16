@@ -6,6 +6,4 @@
 
 * Currently this layer only builds in the DSP library 'fd-dsplib' as a kernel module. The framework building in the application with this needs to be added in the future
 
-* The recipe files are located at common/.
-
 * During development, this metadata section wil be kept in this prebuild directory for version control. This would be contained in a tarball once finalized.
