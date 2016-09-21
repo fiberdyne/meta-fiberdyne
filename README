@@ -1,9 +1,32 @@
-+-----------------------------+
-+    Fiberdyne Yocto Layer    +
-+-----------------------------+
+--------------------------------------------------------------------------------------------------------
+Fiberdyne Yocto Layer Setup
+--------------------------------------------------------------------------------------------------------
 
-* This Yocto layer builds in the Fiberdyne DSP code as a part of the linux image.
+This tutorial will guide you in setting up the meta-fiberdyne Yocto layer for the Poky build environment.
+For all purposes, the Yocto root directory will be referred to as $WORK.
 
-* Currently this layer only builds in the DSP library 'fd-dsplib' as a kernel module. The framework building in the application with this needs to be added in the future
+1. Clone the meta-fiberdyne repository into $WORK:
 
-* During development, this metadata section wil be kept in this prebuild directory for version control. This would be contained in a tarball once finalized.
+   cd $WORK
+   git clone ssh://git@alpha.fiberdyne.com.au:20122/yocto/meta-fiberdyne.git
+
+2. Locate your Yocto bblayers configuration file at $WORK/build/conf/bblayers.conf and ensure that the 
+   following lines areadded to the BBLAYERS variable:
+
+       ${TOPDIR}/../meta-fiberdyne
+
+   Locate your Yocto local configuration file at $WORK/build/conf/local.conf and ensure that the following
+   lines are added to the IMAGE_INSTALL_append variable:
+    
+       fd-dsp \
+
+3. Once your image is built, there will be three new commands which can be readily used:
+      
+   fd-dsp      - Run the main DSP background application
+   fd-dsp-ui   - Run the DSP GUI application (requires fd-dsp to be running)
+   fd-dsp-test - Run an audio test (required fd-dsp to be running)
+  
+
+4. You will need to ensure that Qt5 is also present, and the Boost C++ libraries.
+   For instructions on installing these, visit http://elinux.org/R-Car/Boards/Yocto#Adding_Qt5_in_Yocto_image.
+
