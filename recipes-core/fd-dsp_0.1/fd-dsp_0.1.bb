@@ -25,16 +25,23 @@ do_install () {
     install ${WORKDIR}/fd-dsp/etc/dbus-1/system-local.conf ${D}/${sysconfdir}/dbus-1/
    # Install executables and scripts
     install -d ${D}${bindir}
-    install -m 755 ${WORKDIR}/fd-dsp/usr/bin/fd-dsp.sh ${D}/${bindir}/ 
-    install -m 755 ${WORKDIR}/fd-dsp/usr/bin/fd-dsp ${D}/${bindir}/
-    install -m 755 ${WORKDIR}/fd-dsp/usr/bin/fd-dsp-ui.sh ${D}/${bindir}/
-    install -m 755 ${WORKDIR}/fd-dsp/usr/bin/fd-dsp-ui ${D}/${bindir}/
+    install ${WORKDIR}/fd-dsp/${bindir}/fd-dsp.sh ${D}/${bindir}/ 
+    install ${WORKDIR}/fd-dsp/${bindir}/_fd-dsp ${D}/${bindir}/
+    install ${WORKDIR}/fd-dsp/${bindir}/fd-dsp-ui.sh ${D}/${bindir}/
+    install ${WORKDIR}/fd-dsp/${bindir}/_fd-dsp-ui ${D}/${bindir}/
    # Install test executables and scripts
-    install -m 755 ${WORKDIR}/fd-dsp/usr/bin/fd-dsp-test.sh ${D}/${bindir}/
-    install -m 755 ${WORKDIR}/fd-dsp/usr/bin/ak41_start ${D}/${bindir}/
+    install ${WORKDIR}/fd-dsp/${bindir}/fd-dsp-test.sh ${D}/${bindir}/
+    install ${WORKDIR}/fd-dsp/${bindir}/ak41_start ${D}/${bindir}/
    # Install test .wav files
     install -d ${D}/usr/share
     install ${WORKDIR}/fd-dsp/usr/share/fd-dsp-test.wav ${D}/usr/share/
+   # Install asound.conf for alsamixer
+    install -d ${D}/home/root
+    install ${WORKDIR}/fd-dsp/home/root/.asoundrc ${D}/home/root/
+   # Create symlinks
+    ln -s ${bindir}/fd-dsp.sh ${D}/${bindir}/fd-dsp
+    ln -s ${bindir}/fd-dsp-ui.sh ${D}/${bindir}/fd-dsp-ui
+    ln -s ${bindir}/fd-dsp-test.sh ${D}/${bindir}/fd-dsp-test
 }
 
 # Package the installed files
@@ -43,11 +50,15 @@ FILES_${PN} = " \
     ${base_libdir}/modules/fd-xtensa-hifi.ko \
     ${base_libdir}/modules/fd-alsa-drv.ko \
     ${sysconfdir}/dbus-1/system-local.conf \
-    ${bindir}/fd-dsp.sh \
     ${bindir}/fd-dsp \
-    ${bindir}/fd-dsp-ui.sh \
+    ${bindir}/fd-dsp.sh \
+    ${bindir}/_fd-dsp \
     ${bindir}/fd-dsp-ui \
+    ${bindir}/fd-dsp-ui.sh \
+    ${bindir}/_fd-dsp-ui \
+    ${bindir}/fd-dsp-test \
     ${bindir}/fd-dsp-test.sh \
     ${bindir}/ak41_start \
     /usr/share/fd-dsp-test.wav \
+    /home/root/.asoundrc \
     "
