@@ -1,0 +1,71 @@
+# Global alsa-lib configuration
+
+
+
+#pcm.!default {
+#	type plug
+#	slave.pcm "dmixer"
+#}
+
+pcm.dmixMaster  {
+ 	type dmix
+ 	ipc_key 1024123
+        ipc_key_add_uid true    # let multiple users share
+        ipc_perm 0666           # IPC permissions for multi user sharing (octal, default 0600)
+ 	slave {
+		pcm "hw:1,0"
+                channels 4
+		period_time 0
+		period_size 1024
+		buffer_size 16384
+		rate 48000
+	}
+
+	bindings {
+	 	0 0
+	        1 1
+                2 2
+                3 3
+	} 
+}
+
+
+pcm.router{
+    type route
+    slave.pcm dmixMaster
+    slave.channels 4
+    ttable.0.0 1
+    ttable.1.1 1
+    ttable.2.2 1
+    ttable.3.3 1
+}
+
+
+pcm.sinkStereo {
+    type multi 
+    slaves.a.pcm "router"
+    slaves.a.channels 4
+    bindings.0.slave a
+    bindings.0.channel 0    # bind alsa channel 0 to router channel 0
+    bindings.1.slave a
+    bindings.1.channel 1    # bind alsa channel 0 to router channel 0
+}
+
+
+pcm.sinkTel {
+    type multi 
+    slaves.a.pcm "router"
+    slaves.a.channels 4
+    bindings.0.slave a
+    bindings.0.channel 2    # bind alsa channel 0 to router channel 2
+}
+
+
+pcm.sinkPdc {
+    type multi 
+    slaves.a.pcm "router"
+    slaves.a.channels 4
+    bindings.0.slave a
+    bindings.0.channel 3    # bind alsa channel 0 to router channel 3
+}
+

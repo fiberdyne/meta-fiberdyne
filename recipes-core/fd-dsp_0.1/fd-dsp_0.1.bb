@@ -7,7 +7,6 @@ PV = "0.1"
 
 SRC_URI = "file://fd-dsp.tar.gz"
 
-#inherit bin_package
 do_configure[noexec] = "1"
 do_compile[noexec] = "1"
 
@@ -35,7 +34,7 @@ do_install () {
    # Install test .wav files
     install -d ${D}/usr/share
     install ${WORKDIR}/fd-dsp/usr/share/fd-dsp-test.wav ${D}/usr/share/
-   # Install asound.conf for alsamixer
+   # Install .asoundrc for alsamixer
     install -d ${D}/home/root
     install ${WORKDIR}/fd-dsp/home/root/.asoundrc ${D}/home/root/
    # Create symlinks
