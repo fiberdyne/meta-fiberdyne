@@ -50,6 +50,27 @@ Setup
 4. You will need to ensure that Qt5 is also present, and the Boost C++ libraries.
    For instructions on installing these, visit http://elinux.org/R-Car/Boards/Yocto#Adding_Qt5_in_Yocto_image.
    
+   
+   
+-------------------------------------------------------------------------------------------------------------
+System audio setup and testing
+-------------------------------------------------------------------------------------------------------------
+ALSA has been used to define three audio sinks that supports simultaneous playback within multiple processes. 
+The underlying ALSA driver supports 48000 KHz sample rate only.
 
+1. sinkStereo 
+   Dual channel 16-bit input that emulates any stereo audio (i.e :- music)
 
+2. sinkTel 
+   Single channel 16-bit input for telephone audio
+  
+3. sinkPdc
+   Single channel 16-bit input for navigation audio and other mono audio sources
 
+The test application fd-dsp-test uses the standard ALSA tool, aplay, to play stereo audio using sinkStereo. 
+The other sinks can be tested via the same commands used in the test script. 
+
+It must also be noted that, due to the AK4643 codec driver being implemented as a ALSA device driver, 
+ALSA must be used to initialize the codec for 16-bit audio playback through the line out jack on the Porter board. 
+The AK4643 ALSA device is available as "hw:0,0". Discussion about the steps involved in achieving this is 
+beyond the scope of this document. 
