@@ -59,13 +59,13 @@ ALSA has been used to define three audio sinks that supports simultaneous playba
 The underlying ALSA driver supports 48000 KHz sample rate only.
 
 1. sinkStereo 
-   Dual channel 16-bit input that emulates any stereo audio (i.e :- music)
+   Dual channel 32-bit input that emulates any stereo audio (i.e :- music)
 
 2. sinkTel 
-   Single channel 16-bit input for telephone audio
+   Single channel 32-bit input for telephone audio
   
 3. sinkPdc
-   Single channel 16-bit input for navigation audio and other mono audio sources
+   Single channel 32-bit input for navigation audio and other mono audio sources
 
 The test application fd-dsp-test uses the standard ALSA tool, aplay, to play stereo audio using sinkStereo. 
 The other sinks can be tested via the same commands used in the test script. 
