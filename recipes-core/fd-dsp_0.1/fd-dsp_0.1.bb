@@ -10,6 +10,8 @@ SRC_URI = "file://fd-dsp.tar.gz"
 do_configure[noexec] = "1"
 do_compile[noexec] = "1"
 
+
+
 # Install files
 do_install () {
    # Install firmware
@@ -60,4 +62,15 @@ FILES_${PN} = " \
     ${bindir}/ak41_start \
     /usr/share/fd-dsp-test.wav \
     /home/root/.asoundrc \
+    "
+
+# Runtime dependencies
+RDEPENDS_${PN} = "\
+    libasound \
+    boost-system \
+    boost-thread \
+    boost-filesystem \
+    dbus-lib \
+    dbus-glib \
+    qtbase \
     "
