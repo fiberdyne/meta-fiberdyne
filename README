@@ -1,26 +1,9 @@
---------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------
 Fiberdyne Yocto Layer Setup
---------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------
 
 This tutorial will guide you in setting up the meta-fiberdyne Yocto layer for the Poky build environment.
 For all purposes, the Yocto root directory will be referred to as $WORK.
-
-
--------------
-Prerequisites
--------------
-ADSP Support should be provided by the kernel. Furthermore, audio must be able to be renedered to the codec directly from
-ADSP.
-
-1. To build the Linux kernel with ADSP support insert the line "file://adsp/0001-arm-porter_adsp-support.patch" 
-   to the bitbake script "linux-renesas_3.10.bb" found in 
-   ${TOPDIR}/../meta-renesas/meta-rcar-gen2/recipes-kernel/linux.
-2. To support ADSP debug trace logs the configuration file "./linux-renesas/porter.cfg" shall contain 
-   the line "CONFIG_DEBUG_FS=y"
-3. Copy across the contents of kernelpatches folder to ${TOPDIR}/../meta-renesas/meta-rcar-gen2/recipes-kernel/linux/linux-renesas
-4. Patch, build and deploy the new kernel.
-
-
 
 -------------
 Setup
