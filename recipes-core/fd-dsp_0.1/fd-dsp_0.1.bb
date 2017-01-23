@@ -39,6 +39,8 @@ do_install () {
    # Install .asoundrc for alsamixer
     install -d ${D}/home/root
     install ${WORKDIR}/fd-dsp/home/root/.asoundrc ${D}/home/root/
+   # Install chirp
+    install ${WORKDIR}/fd-dsp/home/root/chirp.wav ${D}/home/root/
    # Create symlinks
     ln -s ${bindir}/fd-dsp.sh ${D}/${bindir}/fd-dsp
     ln -s ${bindir}/fd-dsp-ui.sh ${D}/${bindir}/fd-dsp-ui
@@ -62,6 +64,7 @@ FILES_${PN} = " \
     ${bindir}/ak41_start \
     /usr/share/fd-dsp-test.wav \
     /home/root/.asoundrc \
+    /home/root/chirp.wav \
     "
 
 # Runtime dependencies

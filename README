@@ -3,37 +3,46 @@ Fiberdyne Yocto Layer Setup
 -------------------------------------------------------------------------------------------
 
 This tutorial will guide you in setting up the meta-fiberdyne Yocto layer for the Poky 
-build environment.
+build environment under Automotive Grade Linux.
 For all purposes, the Yocto root directory will be referred to as $WORK.
 
 -------------
 Setup
 -------------
-1. Clone the meta-fiberdyne repository into $WORK:
+1. Clone the "agl" branch of the meta-fiberdyne repository into $WORK/meta:
 
-   cd $WORK
-   git clone ssh://git@alpha.fiberdyne.com.au:20122/yocto/meta-fiberdyne.git
+   cd $WORK/meta
+   git clone https://github.com/fiberdyne/yocto-meta-fiberdyne.git --branch agl
 
 2. Locate your Yocto bblayers configuration file at $WORK/build/conf/bblayers.conf 
-   and ensure that the following lines areadded to the BBLAYERS variable:
+   and add the following lines:
 
-       ${TOPDIR}/../meta-fiberdyne
+       BBLAYERS_append = " ${METADIR}/../meta-fiberdyne"
 
    Locate your Yocto local configuration file at $WORK/build/conf/local.conf
-   and ensure that the following lines are added to the IMAGE_INSTALL_append variable:
+   and add the following lines:
     
-       fd-dsp \
+       IMAGE_INSTALL_append = " fd-dsp"
 
-3. Once your image is built, there will be three new commands which can be readily used:
+3. Build your AGL image.
+
+4. Once your image is built, there will be three new commands which can be readily used from the terminal:
       
    fd-dsp      - Run the main DSP background application
    fd-dsp-ui   - Run the DSP GUI application (requires fd-dsp to be running)
    fd-dsp-test - Run an audio test (required fd-dsp to be running)
-  
 
-4. You will need to ensure that Qt5 is also present, and the Boost C++ libraries.
-   For instructions on installing these, visit: 
-   http://elinux.org/R-Car/Boards/Yocto#Adding_Qt5_in_Yocto_image.
+
+[NOTE]
+  If you are not seeing a UI after running fd-dsp-ui, you may have to switch the desktop shell.
+  To do so, edit the following file:
+
+  /etc/xdg/weston/weston.ini
+
+  And ensure that the shell variable is as follows:
+
+  shell=desktop-shell.so
+
    
 -------------------------------------------------------------------------------------------
 System Audio Info
