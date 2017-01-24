@@ -7,9 +7,9 @@ PV = "0.1"
 
 SRC_URI = "file://fd-dsp.tar.gz"
 
+# Skip configure and compilation
 do_configure[noexec] = "1"
 do_compile[noexec] = "1"
-
 
 
 # Install files
@@ -41,10 +41,17 @@ do_install () {
     install ${WORKDIR}/fd-dsp/home/root/.asoundrc ${D}/home/root/
    # Install chirp
     install ${WORKDIR}/fd-dsp/home/root/chirp.wav ${D}/home/root/
+   # Install systemd .service
+    install -d ${D}/${sysconfdir}/systemd/system
+    install ${WORKDIR}/fd-dsp/etc/systemd/system/fd-dsp.service ${D}/${sysconfdir}/systemd/system/
    # Create symlinks
     ln -s ${bindir}/fd-dsp.sh ${D}/${bindir}/fd-dsp
     ln -s ${bindir}/fd-dsp-ui.sh ${D}/${bindir}/fd-dsp-ui
     ln -s ${bindir}/fd-dsp-test.sh ${D}/${bindir}/fd-dsp-test
+    
+   # Create symlink to .service
+    install -d ${D}/${sysconfdir}/systemd/system/default.target.wants
+    ln -s ${sysconfdir}/systemd/system/fd-dsp.service ${D}/${sysconfdir}/systemd/system/default.target.wants/
 }
 
 # Package the installed files
@@ -53,6 +60,8 @@ FILES_${PN} = " \
     ${base_libdir}/modules/fd-xtensa-hifi.ko \
     ${base_libdir}/modules/fd-alsa-drv.ko \
     ${sysconfdir}/dbus-1/system-local.conf \
+    ${sysconfdir}/systemd/system/fd-dsp.service \
+    ${sysconfdir}/systemd/system/default.target.wants/fd-dsp.service \
     ${bindir}/fd-dsp \
     ${bindir}/fd-dsp.sh \
     ${bindir}/_fd-dsp \

@@ -1,0 +1,9 @@
+[Unit]
+Description=Fiberdyne DSP
+
+[Service]
+Type=forking
+ExecStart=/usr/bin/fd-dsp
+
+[Install]
+WantedBy=default.target

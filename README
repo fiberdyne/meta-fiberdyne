@@ -26,20 +26,27 @@ Setup
 
 3. Build your AGL image.
 
-4. Once your image is built, there will be two new commands which can be readily used from the terminal:
-      
-   fd-dsp      - Run the DSP background service (this automatically outputs test audio to the LINE OUT)
-   fd-dsp-ui   - Run the DSP GUI application (requires fd-dsp to be running)
+4. Once your image is built, a modification will need to be made to the weston.ini file residing at:
 
-[NOTE]
-  If you are not seeing a UI after running fd-dsp-ui, you may have to switch the desktop shell.
-  To do so, edit the following file:
+   /etc/xdg/weston/weston.ini
+   
+   Add the following lines to the file:
+  
+   [launcher]
+   icon=/usr/share/icons/hicolor/32x32/apps/rygel.png
+   path=/usr/bin/_fd-dsp-ui
+   
+   And change the shell variable to:
+   shell=desktop-shell.so
 
-  /etc/xdg/weston/weston.ini
+   Then run:
+   systemctl restart weston
 
-  And ensure that the shell variable is as follows:
+   You will now have an launcher icon in the top left corner, and this is used to launch the fd-dsp UI.
 
-  shell=desktop-shell.so
+5. Reboot, and the fd-dsp daemon should be running. There should be audio coming from the LINE OUT auxillary.
+
+6. Tap the icon to use the UI
 
 [NOTE]
   It is possible to run the UI from the AGL HomeScreen, however there is currently a bug in it that prohibits
