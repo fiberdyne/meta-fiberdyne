@@ -3,7 +3,7 @@ Fiberdyne Yocto Layer Setup
 -------------------------------------------------------------------------------------------
 
 This tutorial will guide you in setting up the meta-fiberdyne Yocto layer for the Poky 
-build environment under Automotive Grade Linux.
+build environment under Automotive Grade Linux on the Renesas M2 Porter.
 For all purposes, the Yocto root directory will be referred to as $WORK.
 
 -------------
@@ -26,12 +26,10 @@ Setup
 
 3. Build your AGL image.
 
-4. Once your image is built, there will be three new commands which can be readily used from the terminal:
+4. Once your image is built, there will be two new commands which can be readily used from the terminal:
       
-   fd-dsp      - Run the main DSP background application
+   fd-dsp      - Run the DSP background service (this automatically outputs test audio to the LINE OUT)
    fd-dsp-ui   - Run the DSP GUI application (requires fd-dsp to be running)
-   fd-dsp-test - Run an audio test (required fd-dsp to be running)
-
 
 [NOTE]
   If you are not seeing a UI after running fd-dsp-ui, you may have to switch the desktop shell.
@@ -42,6 +40,10 @@ Setup
   And ensure that the shell variable is as follows:
 
   shell=desktop-shell.so
+
+[NOTE]
+  It is possible to run the UI from the AGL HomeScreen, however there is currently a bug in it that prohibits
+  aour package to be installed.  This will come in future updates.
 
    
 -------------------------------------------------------------------------------------------
