@@ -42,11 +42,11 @@ Setup
    Then run:
    systemctl restart weston
 
-   You will now have an launcher icon in the top left corner, and this is used to launch the fd-dsp UI.
+   You will now have a launcher icon in the top left corner, and this is used to launch the fd-dsp UI.
 
 5. Reboot, and the fd-dsp daemon should be running. There should be audio coming from the LINE OUT auxillary.
 
-6. Tap the icon to use the UI
+6. Tap the icon to use the UI. If the UI does not alter the audio, REBOOT since the connection has failed.
 
 [NOTE]
   It is possible to run the UI from the AGL HomeScreen, however there is currently a bug in it that prohibits
