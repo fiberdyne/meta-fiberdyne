@@ -41,17 +41,18 @@ do_install () {
     install ${WORKDIR}/fd-dsp/home/root/.asoundrc ${D}/home/root/
    # Install chirp
     install ${WORKDIR}/fd-dsp/home/root/chirp.wav ${D}/home/root/
-   # Install systemd .service
-    install -d ${D}/${sysconfdir}/systemd/system
-    install ${WORKDIR}/fd-dsp/etc/systemd/system/fd-dsp.service ${D}/${sysconfdir}/systemd/system/
+   # Install systemd fd-dsp.service
+    install -d ${D}/${base_libdir}/systemd/system
+    install ${WORKDIR}/fd-dsp/lib/systemd/system/fd-dsp.service ${D}/${base_libdir}/systemd/system/
+
    # Create symlinks
     ln -s ${bindir}/fd-dsp.sh ${D}/${bindir}/fd-dsp
     ln -s ${bindir}/fd-dsp-ui.sh ${D}/${bindir}/fd-dsp-ui
     ln -s ${bindir}/fd-dsp-test.sh ${D}/${bindir}/fd-dsp-test
     
-   # Create symlink to .service
+   # Create symlinks to fd-dsp.service
     install -d ${D}/${sysconfdir}/systemd/system/default.target.wants
-    ln -s ${sysconfdir}/systemd/system/fd-dsp.service ${D}/${sysconfdir}/systemd/system/default.target.wants/
+    ln -s ${base_libdir}/systemd/system/fd-dsp.service ${D}/${sysconfdir}/systemd/system/default.target.wants/
 }
 
 # Package the installed files
@@ -59,9 +60,9 @@ FILES_${PN} = " \
     ${base_libdir}/firmware/xf-m2.fw \
     ${base_libdir}/modules/fd-xtensa-hifi.ko \
     ${base_libdir}/modules/fd-alsa-drv.ko \
-    ${sysconfdir}/dbus-1/system-local.conf \
-    ${sysconfdir}/systemd/system/fd-dsp.service \
+    ${base_libdir}/systemd/system/fd-dsp.service \
     ${sysconfdir}/systemd/system/default.target.wants/fd-dsp.service \
+    ${sysconfdir}/dbus-1/system-local.conf \
     ${bindir}/fd-dsp \
     ${bindir}/fd-dsp.sh \
     ${bindir}/_fd-dsp \
@@ -78,6 +79,7 @@ FILES_${PN} = " \
 
 # Runtime dependencies
 RDEPENDS_${PN} = "\
+    bash \ 
     libasound \
     boost-system \
     boost-thread \
