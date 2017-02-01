@@ -33,14 +33,15 @@ do_install () {
    # Install test executables and scripts
     install ${WORKDIR}/fd-dsp/${bindir}/fd-dsp-test.sh ${D}/${bindir}/
     install ${WORKDIR}/fd-dsp/${bindir}/ak41_start ${D}/${bindir}/
-   # Install test .wav files
+   # Install .wav files
     install -d ${D}/usr/share
     install ${WORKDIR}/fd-dsp/usr/share/fd-dsp-test.wav ${D}/usr/share/
+    install ${WORKDIR}/fd-dsp/usr/share/fd-dsp-sweep.wav ${D}/usr/share/
    # Install .asoundrc for alsamixer
     install -d ${D}/home/root
     install ${WORKDIR}/fd-dsp/home/root/.asoundrc ${D}/home/root/
-   # Install chirp
-    install ${WORKDIR}/fd-dsp/home/root/chirp.wav ${D}/home/root/
+   # Install afm fd-dsp-ui.wgt
+    install ${WORKDIR}/fd-dsp/home/root/fd-dsp-ui.wgt ${D}/home/root/
    # Install systemd fd-dsp.service
     install -d ${D}/${base_libdir}/systemd/system
     install ${WORKDIR}/fd-dsp/lib/systemd/system/fd-dsp.service ${D}/${base_libdir}/systemd/system/
@@ -73,8 +74,9 @@ FILES_${PN} = " \
     ${bindir}/fd-dsp-test.sh \
     ${bindir}/ak41_start \
     /usr/share/fd-dsp-test.wav \
+    /usr/share/fd-dsp-sweep.wav \
+    /home/root/fd-dsp-ui.wgt \
     /home/root/.asoundrc \
-    /home/root/chirp.wav \
     "
 
 # Runtime dependencies
