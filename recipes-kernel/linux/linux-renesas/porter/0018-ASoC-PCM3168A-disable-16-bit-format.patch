@@ -1,0 +1,26 @@
+From 4b228271e1276e67d3892aef2e86644c8f382314 Mon Sep 17 00:00:00 2001
+From: Andrey Gusakov <andrey.gusakov@cogentembedded.com>
+Date: Wed, 13 Apr 2016 14:36:14 +0300
+Subject: [PATCH 18/21] ASoC: PCM3168A: disable 16 bit format
+
+
+Signed-off-by: Andrey Gusakov <andrey.gusakov@cogentembedded.com>
+---
+ sound/soc/codecs/pcm3168a.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/sound/soc/codecs/pcm3168a.c b/sound/soc/codecs/pcm3168a.c
+index 6287ad9..06b5d53 100644
+--- a/sound/soc/codecs/pcm3168a.c
++++ b/sound/soc/codecs/pcm3168a.c
+@@ -22,7 +22,7 @@
+
+ #include "pcm3168a.h"
+
+-#define PCM3168A_FORMATS (SNDRV_PCM_FMTBIT_S16_LE | \
++#define PCM3168A_FORMATS (/*SNDRV_PCM_FMTBIT_S16_LE | */\
+ 			 SNDRV_PCM_FMTBIT_S24_3LE | \
+ 			 SNDRV_PCM_FMTBIT_S24_LE | \
+ 			 SNDRV_PCM_FMTBIT_S32_LE)
+--
+1.7.10.4

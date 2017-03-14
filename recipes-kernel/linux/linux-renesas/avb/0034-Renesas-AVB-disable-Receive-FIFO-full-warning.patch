@@ -1,0 +1,30 @@
+From 863f0a5160d18c191dae7eccd4a3c262801feb23 Mon Sep 17 00:00:00 2001
+From: Andrey Gusakov <andrey.gusakov@cogentembedded.com>
+Date: Mon, 28 Sep 2015 14:01:35 +0300
+Subject: [PATCH] Renesas AVB: disable Receive FIFO full warning
+
+Because nobody handle this interrupt source which cause kernel
+WARN and RAVB irg get disabled. This cause dramatic bandwidth
+drop.
+
+Signed-off-by: Andrey Gusakov <andrey.gusakov@cogentembedded.com>
+---
+ drivers/net/ethernet/renesas/ravb_main.c |    2 --
+ 1 file changed, 2 deletions(-)
+
+diff --git a/drivers/net/ethernet/renesas/ravb_main.c b/drivers/net/ethernet/renesas/ravb_main.c
+index 2ff280c..c4bd3a1 100644
+--- a/drivers/net/ethernet/renesas/ravb_main.c
++++ b/drivers/net/ethernet/renesas/ravb_main.c
+@@ -770,8 +770,6 @@ static int ravb_dmac_init(struct net_device *ndev, bool start)
+ 	if (start) {
+ 		/* Frame Receive */
+ 		ravb_write(ndev, 0x00000003, RIC0);
+-		/* Receive FIFO full warning */
+-		ravb_write(ndev, 0x80000000, RIC1);
+ 		/* Receive FIFO full error, Descriptor Empty */
+ 		ravb_write(ndev, 0x80000003, RIC2);
+ 		/* Frame Transmited, Timestamp FIFO updated */
+-- 
+1.7.10.4
+

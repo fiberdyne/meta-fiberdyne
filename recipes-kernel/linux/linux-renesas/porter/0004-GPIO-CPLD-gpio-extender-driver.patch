@@ -1,0 +1,248 @@
+From 2a3918e3dc0cd00c7abf52a0d13dafb458f22acd Mon Sep 17 00:00:00 2001
+From: Andrey Gusakov <andrey.gusakov@cogentembedded.com>
+Date: Fri, 29 Jan 2016 15:50:00 +0300
+Subject: [PATCH 04/10] GPIO: CPLD gpio extender driver
+
+
+Signed-off-by: Andrey Gusakov <andrey.gusakov@cogentembedded.com>
+---
+ drivers/gpio/Kconfig     |    7 ++
+ drivers/gpio/Makefile    |    1 +
+ drivers/gpio/gpio-cpld.c |  195 ++++++++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 203 insertions(+)
+ create mode 100644 drivers/gpio/gpio-cpld.c
+
+diff --git a/drivers/gpio/Kconfig b/drivers/gpio/Kconfig
+index 4389778..12a2f8a 100644
+--- a/drivers/gpio/Kconfig
++++ b/drivers/gpio/Kconfig
+@@ -209,6 +209,13 @@ config GPIO_RCAR
+ 	help
+ 	  Say yes here to support GPIO on Renesas R-Car SoCs.
+
++config GPIO_PORTER_CPLD
++	bool "Renesas Porter extension board CPLD gpios"
++	depends on ARM
++	help
++	  Say yes here to support GPIOs on Renesas Porter
++	  extension board from CogentEmbedded.
++
+ config GPIO_SPEAR_SPICS
+ 	bool "ST SPEAr13xx SPI Chip Select as GPIO support"
+ 	depends on PLAT_SPEAR
+diff --git a/drivers/gpio/Makefile b/drivers/gpio/Makefile
+index 2636985..8e66571 100644
+--- a/drivers/gpio/Makefile
++++ b/drivers/gpio/Makefile
+@@ -59,6 +59,7 @@ obj-$(CONFIG_GPIO_PXA)		+= gpio-pxa.o
+ obj-$(CONFIG_GPIO_RC5T583)	+= gpio-rc5t583.o
+ obj-$(CONFIG_GPIO_RDC321X)	+= gpio-rdc321x.o
+ obj-$(CONFIG_GPIO_RCAR)		+= gpio-rcar.o
++obj-$(CONFIG_GPIO_PORTER_CPLD)	+= gpio-cpld.o
+ obj-$(CONFIG_PLAT_SAMSUNG)	+= gpio-samsung.o
+ obj-$(CONFIG_ARCH_SA1100)	+= gpio-sa1100.o
+ obj-$(CONFIG_GPIO_SCH)		+= gpio-sch.o
+diff --git a/drivers/gpio/gpio-cpld.c b/drivers/gpio/gpio-cpld.c
+new file mode 100644
+index 0000000..25b57a3
+--- /dev/null
++++ b/drivers/gpio/gpio-cpld.c
+@@ -0,0 +1,195 @@
++/*
++ * r8a7791-porter extension board CPLD access driver
++ *
++ * Copyright (C) 2016 Cogent Embedded, Inc.
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 as
++ * published by the Free Software Foundation.
++ */
++
++#include <linux/module.h>
++#include <linux/of.h>
++#include <linux/of_device.h>
++#include <linux/of_gpio.h>
++#include <linux/gpio.h>
++
++struct porter_cpld_gpio_priv {
++	unsigned 		data_gpio;	/* data gpio */
++	unsigned 		ptrc_gpio;	/* pointer clock gpio */
++	unsigned 		bufc_gpio;	/* buffer clock gpio */
++
++	struct gpio_chip	gpio_chip;
++
++	uint16_t		state;		/* saved gpios state */
++};
++
++static int porter_cpld_gpio_clock_val(struct porter_cpld_gpio_priv *priv,
++	int bit, int val)
++{
++	int i;
++
++	/* reset pointer */
++	gpio_set_value(priv->data_gpio, 1);
++	gpio_set_value(priv->ptrc_gpio, 1);
++	gpio_set_value(priv->data_gpio, 0);
++	gpio_set_value(priv->ptrc_gpio, 0);
++
++	for (i = 0; i < bit; i++) {
++		gpio_set_value(priv->ptrc_gpio, 1);
++		gpio_set_value(priv->ptrc_gpio, 0);
++	}
++
++	gpio_set_value(priv->data_gpio, val);
++	gpio_set_value(priv->bufc_gpio, 1);
++	gpio_set_value(priv->bufc_gpio, 0);
++
++	if (val)
++		priv->state |= (1 << bit);
++	else
++		priv->state &= ~(1 << bit);
++
++	return 0;
++}
++
++static int porter_cpld_gpio_get_value(struct gpio_chip *gc, unsigned off)
++{
++	struct porter_cpld_gpio_priv *priv;
++
++	priv = container_of(gc, struct porter_cpld_gpio_priv, gpio_chip);
++
++	return !!(priv->state & (1 << off));
++}
++
++static void porter_cpld_gpio_set_value(struct gpio_chip *gc, unsigned off, int val)
++{
++	struct porter_cpld_gpio_priv *priv;
++
++	priv = container_of(gc, struct porter_cpld_gpio_priv, gpio_chip);
++
++	porter_cpld_gpio_clock_val(priv, off, val);
++}
++
++static int porter_cpld_gpio_direction_input(struct gpio_chip *gc, unsigned off)
++{
++	return -EPERM;
++}
++
++static int porter_cpld_gpio_direction_output(struct gpio_chip *gc, unsigned off,
++	int val)
++{
++	struct porter_cpld_gpio_priv *priv;
++
++	priv = container_of(gc, struct porter_cpld_gpio_priv, gpio_chip);
++
++	return porter_cpld_gpio_clock_val(priv, off, val);
++}
++
++static struct porter_cpld_gpio_priv *porter_cpld_gpio_parse_dt(struct device *dev)
++{
++	struct device_node *np = dev->of_node;
++	struct porter_cpld_gpio_priv *priv;
++
++	priv = devm_kzalloc(dev, sizeof(*priv), GFP_KERNEL);
++	if (!priv)
++		return NULL;
++
++	priv->data_gpio = of_get_named_gpio(np, "porter-cpld-gpio,data-gpio", 0);
++	if (priv->data_gpio < 0)
++		return NULL;
++
++	priv->ptrc_gpio = of_get_named_gpio(np, "porter-cpld-gpio,ptrc-gpio", 0);
++	if (priv->ptrc_gpio < 0)
++		return NULL;
++
++	priv->bufc_gpio = of_get_named_gpio(np, "porter-cpld-gpio,bufc-gpio", 0);
++	if (priv->bufc_gpio < 0)
++		return NULL;
++
++	return priv;
++}
++
++static void porter_cpld_gpio_init(struct porter_cpld_gpio_priv *priv)
++{
++	gpio_request_one(priv->data_gpio, GPIOF_OUT_INIT_HIGH, "cpld-data");
++	gpio_request_one(priv->ptrc_gpio, GPIOF_OUT_INIT_HIGH, "cpld-ptrc");
++	gpio_request_one(priv->bufc_gpio, GPIOF_OUT_INIT_HIGH, "cpld-bufc");
++}
++
++static int porter_cpld_gpio_probe(struct platform_device *pdev)
++{
++	struct device *dev = &pdev->dev;
++	struct porter_cpld_gpio_priv *priv;
++	struct gpio_chip *gc;
++	int ret;
++
++	priv = porter_cpld_gpio_parse_dt(dev);
++	if (!priv)
++		return -EPROBE_DEFER;
++
++	/* request gpios */
++	porter_cpld_gpio_init(priv);
++
++	priv->state = 0x0;
++	gc = &priv->gpio_chip;
++	gc->of_node = pdev->dev.of_node;
++	gc->direction_input = porter_cpld_gpio_direction_input;
++	gc->direction_output = porter_cpld_gpio_direction_output;
++	gc->get = porter_cpld_gpio_get_value;
++	gc->set = porter_cpld_gpio_set_value;
++
++	gc->base = -1;
++	gc->ngpio = 16;
++	gc->label = "porter-gpio";
++	gc->owner = THIS_MODULE;
++
++	ret = gpiochip_add(&priv->gpio_chip);
++	if (ret)
++		return ret;
++
++	return 0;
++}
++
++static int porter_cpld_gpio_remove(struct platform_device *pdev)
++{
++	int ret;
++	struct device *dev = &pdev->dev;
++	struct porter_cpld_gpio_priv *priv = dev_get_drvdata(dev);
++
++	ret = gpiochip_remove(&priv->gpio_chip);
++	if (ret) {
++		dev_err(dev, "gpiochip_remove failed %d\n", ret);
++		return ret;
++	}
++
++	return 0;
++}
++
++static const struct of_device_id porter_cpld_gpio_dt_ids[] = {
++	{ .compatible = "porter-cpld-gpio" },
++	{},
++};
++MODULE_DEVICE_TABLE(of, porter_cpld_gpio_dt_ids);
++
++static struct platform_driver porter_cpld_gpio_driver = {
++	.driver	= {
++		.name		= "porter-cpld-gpio",
++		.owner		= THIS_MODULE,
++		.of_match_table	= of_match_ptr(porter_cpld_gpio_dt_ids),
++	},
++	.probe	= porter_cpld_gpio_probe,
++	.remove	= porter_cpld_gpio_remove,
++};
++
++static int __init porter_cpld_gpio_driver_init(void)
++{
++	return platform_driver_register(&porter_cpld_gpio_driver);
++}
++
++static void __exit porter_cpld_gpio_driver_exit(void)
++{
++	platform_driver_unregister(&porter_cpld_gpio_driver);
++}
++
++subsys_initcall_sync(porter_cpld_gpio_driver_init);
++module_exit(porter_cpld_gpio_driver_exit);
+\ No newline at end of file
+--
+1.7.10.4

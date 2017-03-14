@@ -1,0 +1,24 @@
+From 9f62d868ad64af881f9dc54471ca0410efe01c2e Mon Sep 17 00:00:00 2001
+From: Grigory Kletsko <grigory.kletsko@cogentembedded.com>
+Date: Wed, 15 Jun 2016 21:19:21 +0300
+Subject: [PATCH 4/5] R-Car: sound: disable clock hack
+
+---
+ sound/soc/sh/rcar/rsnd.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/sound/soc/sh/rcar/rsnd.h b/sound/soc/sh/rcar/rsnd.h
+index d3b544b..1bbd5bc 100644
+--- a/sound/soc/sh/rcar/rsnd.h
++++ b/sound/soc/sh/rcar/rsnd.h
+@@ -492,7 +492,7 @@ struct rsnd_mod *rsnd_dvc_mod_get(struct rsnd_priv *priv, int id);
+
+ #define rsnd_dvc_nr(priv) ((priv)->dvc_nr)
+
+-#define QUICK_HACK
++/* #define QUICK_HACK */
+ #ifdef QUICK_HACK
+ void rsnd_adg_clk_set_rate(struct rsnd_mod *mod, unsigned int rate);
+ #endif
+--
+2.5.0

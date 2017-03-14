@@ -1,0 +1,67 @@
+diff --git a/build/tmp/work-shared/porter/kernel-source/drivers/net/ethernet/renesas/ravb_main.c b/../r-car_dev/expansion-build/build/tmp/work/porter-poky-linux-gnueabi/linux-renesas/3.10+git165e12ce2d7839e755debbec78dfa43b54345275-r1/git/drivers/net/ethernet/renesas/ravb_main.c
+index ba5767f..65a7a18 100644
+--- a/drivers/net/ethernet/renesas/ravb_main.c
++++ b/drivers/net/ethernet/renesas/ravb_main.c
+@@ -770,8 +770,6 @@ static int ravb_dmac_init(struct net_device *ndev, bool start)
+ 	if (start) {
+ 		/* Frame Receive */
+ 		ravb_write(ndev, 0x00000003, RIC0);
+-		/* Receive FIFO full warning */
+-		ravb_write(ndev, 0x80000000, RIC1);
+ 		/* Receive FIFO full error, Descriptor Empty */
+ 		ravb_write(ndev, 0x80000003, RIC2);
+ 		/* Frame Transmited, Timestamp FIFO updated */
+@@ -1350,8 +1348,15 @@ static int ravb_phy_start(struct net_device *ndev)
+ 	int ret;
+ 
+ 	ret = ravb_phy_init(ndev);
+-	if (ret)
+-		return ret;
++	if (ret) {
++		/* try alternative mdio address */
++		if (mdp->phy_id_alt) {
++			mdp->phy_id = mdp->phy_id_alt;
++			ret = ravb_phy_init(ndev);
++		}
++		if (ret)
++			return ret;
++	}
+ 
+ 	ravb_phy_hack(ndev);
+ 
+@@ -2046,8 +2051,10 @@ static int sh_mdio_init(struct ravb_private *mdp,
+ 	/* register MDIO bus */
+ 	for (i = 0; i < PHY_MAX_ADDR; i++)
+ 		mdp->mii_bus->irq[i] = PHY_POLL;
+-	if (pd->phy_irq > 0)
++	if (pd->phy_irq > 0) {
+ 		mdp->mii_bus->irq[pd->phy] = pd->phy_irq;
++		mdp->mii_bus->irq[pd->phy_alt] = pd->phy_irq;
++	}
+ 
+ 	ret = mdiobus_register(mdp->mii_bus);
+ 
+@@ -2113,6 +2120,7 @@ static struct ravb_plat_data *ravb_parse_dt(struct device *dev,
+ 	pdata->ether_link_active_low =
+ 		of_property_read_bool(np, "renesas,ether-link-active-low");
+ 	of_property_read_u32(np, "renesas,phy", &pdata->phy);
++	of_property_read_u32(np, "renesas,phy_alt", &pdata->phy_alt);
+ 	of_property_read_u32(np, "renesas,phy_irq", &pdata->phy_irq);
+ 	gpio = of_get_named_gpio_flags(np, "phy-int-gpio", 0, &flags);
+ 	if (gpio_is_valid(gpio)) {
+@@ -2145,6 +2153,7 @@ static struct ravb_plat_data *ravb_parse_dt(struct device *dev,
+ 
+ static const struct of_device_id ravb_match_table[] = {
+ 	{ .compatible = "renesas,gether-r8a7790", .data = &r8a779x_data_giga },
++	{ .compatible = "renesas,gether-r8a7791", .data = &r8a779x_data_giga },
+ 	{ .compatible = "renesas,gether-r8a7794", .data = &r8a779x_data_giga },
+ 	{ }
+ };
+@@ -2220,6 +2229,7 @@ static int ravb_drv_probe(struct platform_device *pdev)
+ 
+ 	/* get PHY ID */
+ 	mdp->phy_id = pd->phy;
++	mdp->phy_id_alt = pd->phy_alt;
+ 	mdp->phy_irq = pd->phy_irq;
+ 	mdp->phy_interface = pd->phy_interface;
+ 	/* EDMAC endian */

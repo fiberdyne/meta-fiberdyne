@@ -1,0 +1,58 @@
+From 21d354b9207b2f5c174cf26b7ad7cfaf4fc7d80b Mon Sep 17 00:00:00 2001
+From: Andrey Gusakov <andrey.gusakov@cogentembedded.com>
+Date: Fri, 24 Jun 2016 13:50:51 +0300
+Subject: [PATCH] ASoC: R-car: SSI fix SSI slave mode setup while TDM and
+ shared
+
+Signed-off-by: Andrey Gusakov <andrey.gusakov@cogentembedded.com>
+---
+ sound/soc/sh/rcar/ssi.c |   24 +++++++++++-------------
+ 1 file changed, 11 insertions(+), 13 deletions(-)
+
+diff --git a/sound/soc/sh/rcar/ssi.c b/sound/soc/sh/rcar/ssi.c
+index 1cbd1d4..89e311f 100644
+--- a/sound/soc/sh/rcar/ssi.c
++++ b/sound/soc/sh/rcar/ssi.c
+@@ -231,28 +231,26 @@ static void rsnd_ssi_hw_start(struct rsnd_ssi *ssi,
+ 		rsnd_mod_hw_start(&ssi->mod);
+ 
+ 		if (rsnd_dai_is_clk_master(rdai)) {
++			u32 wsr = 0;
++
++			/* enable WS continue */
++			wsr |= CONT;
++
++			/* Enable TDM */
++			if (rsnd_ssi_is_tdm(ssi))
++				wsr |= WS_MODE_TDM;
++
+ 			if (rsnd_ssi_clk_from_parent(ssi)) {
+ 				int wsr;
+ 				/* in TDM mode CKDV=0 is invalid */
+ 				ssi->cr_clk = CKDV(1);
+-				if (ssi->parent->usrcnt == 0) {
++				if (ssi->parent->usrcnt == 0)
+ 					ssi->parent->cr_own = ssi->cr_own;
+-
+-					/* enable WS continue */
+-					wsr = CONT;
+-
+-					/* Enable TDM */
+-					if (rsnd_ssi_is_tdm(ssi))
+-						wsr |= WS_MODE_TDM;
+-				}
+ 				rsnd_ssi_hw_start(ssi->parent, rdai, io);
+-				/* set WSR after master mode is set in CR */
+-				if (wsr)
+-					rsnd_mod_write(&ssi->parent->mod, SSIWSR, wsr);
+-
+ 			} else {
+ 				rsnd_ssi_master_clk_start(ssi, io);
+ 			}
++			rsnd_mod_write(&ssi->mod, SSIWSR, wsr);
+ 		}
+ 	}
+ 
+-- 
+1.7.10.4
+

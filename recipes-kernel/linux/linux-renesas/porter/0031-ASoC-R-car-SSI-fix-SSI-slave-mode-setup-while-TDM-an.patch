@@ -1,0 +1,48 @@
+From 9467d97eaa2ede54dc67a0f83eb3cdd30cf9dc15 Mon Sep 17 00:00:00 2001
+From: Grigory Kletsko <grigory.kletsko@cogentembedded.com>
+Date: Wed, 15 Jun 2016 21:23:03 +0300
+Subject: [PATCH 5/5] ASoC: R-car: SSI fix SSI slave mode setup while TDM and
+
+---
+ sound/soc/sh/rcar/ssi.c | 22 +++++++++++++++-------
+ 1 file changed, 15 insertions(+), 7 deletions(-)
+
+diff --git a/sound/soc/sh/rcar/ssi.c b/sound/soc/sh/rcar/ssi.c
+index a69e621..65af590 100644
+--- a/sound/soc/sh/rcar/ssi.c
++++ b/sound/soc/sh/rcar/ssi.c
+@@ -231,17 +231,25 @@ static void rsnd_ssi_hw_start(struct rsnd_ssi *ssi,
+ 		rsnd_mod_hw_start(&ssi->mod);
+
+ 		if (rsnd_dai_is_clk_master(rdai)) {
+-			/* enable WS continue */
+-			if (rsnd_dai_is_clk_master(rdai)) {
+-				status = rsnd_mod_read(&ssi->mod, SSIWSR);
+-				if (!(status & CONT))
+-					rsnd_mod_write(&ssi->mod, SSIWSR, CONT);
+-			}
+-
+ 			if (rsnd_ssi_clk_from_parent(ssi)) {
++				int wsr;
+ 				/* in TDM mode CKDV=0 is invalid */
+ 				ssi->cr_clk = CKDV(1);
++				if (ssi->parent->usrcnt == 0) {
++					ssi->parent->cr_own = ssi->cr_own;
++
++					/* enable WS continue */
++					wsr = CONT;
++
++					/* Enable TDM */
++					if (rsnd_ssi_is_tdm(ssi))
++						wsr |= WS_MODE_TDM;
++				}
+ 				rsnd_ssi_hw_start(ssi->parent, rdai, io);
++				/* set WSR after master mode is set in CR */
++				if (wsr)
++					rsnd_mod_write(&ssi->parent->mod, SSIWSR, wsr);
++
+ 			} else {
+ 				rsnd_ssi_master_clk_start(ssi, io);
+ 			}
+--
+2.5.0

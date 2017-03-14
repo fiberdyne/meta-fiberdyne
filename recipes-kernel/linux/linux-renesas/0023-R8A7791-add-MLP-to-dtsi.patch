@@ -1,0 +1,19 @@
+diff --git a/arch/arm/boot/dts/r8a7791.dtsi b/arch/arm/boot/dts/r8a7791.dtsi
+index 824583c..e811912 100644
+--- a/arch/arm/boot/dts/r8a7791.dtsi
++++ b/arch/arm/boot/dts/r8a7791.dtsi
+@@ -621,6 +621,14 @@
+ 		status = "disabled";
+ 	};
+ 
++	mlp: mlp@ec520000 {
++		compatible = "renesas,mlp";
++		reg = <0 0xec520000 0 0x800>;
++		interrupts = <0 350 IRQ_TYPE_LEVEL_HIGH>, <0 351 IRQ_TYPE_LEVEL_HIGH>, <0 349 IRQ_TYPE_LEVEL_HIGH>;
++		clocks = <&mstp8_clks R8A7791_CLK_MLB>;
++		status = "okay";
++	};
++
+ 	clocks {
+ 		#address-cells = <2>;
+ 		#size-cells = <2>;

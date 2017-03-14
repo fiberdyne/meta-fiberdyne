@@ -1,0 +1,26 @@
+From 95e2424a054402d712feeebdcb3be5db4c545b5d Mon Sep 17 00:00:00 2001
+From: Andrey Gusakov <andrey.gusakov@cogentembedded.com>
+Date: Fri, 12 Feb 2016 17:52:21 +0300
+Subject: [PATCH 23/31] SPI-GPIO: get master fix
+
+
+Signed-off-by: Andrey Gusakov <andrey.gusakov@cogentembedded.com>
+---
+ drivers/spi/spi-gpio.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/spi/spi-gpio.c b/drivers/spi/spi-gpio.c
+index 0021fc4..86f2ecc 100644
+--- a/drivers/spi/spi-gpio.c
++++ b/drivers/spi/spi-gpio.c
+@@ -469,7 +469,7 @@ static int spi_gpio_probe(struct platform_device *pdev)
+ 	}
+ #endif
+
+-	spi_gpio->bitbang.master = spi_master_get(master);
++	spi_gpio->bitbang.master = master;
+ 	spi_gpio->bitbang.chipselect = spi_gpio_chipselect;
+
+ 	if ((master_flags & (SPI_MASTER_NO_TX | SPI_MASTER_NO_RX)) == 0) {
+--
+1.7.10.4

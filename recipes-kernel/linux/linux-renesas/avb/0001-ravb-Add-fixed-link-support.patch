@@ -1,0 +1,57 @@
+From b68fddb08001d38022716ce5b12de8edef72c3ac Mon Sep 17 00:00:00 2001
+From: Vladimir Barinov <vladimir.barinov@cogentembedded.com>
+Date: Fri, 18 Mar 2016 16:42:28 +0100
+Subject: [PATCH] ravb: Add fixed-link support
+
+This adds support of the fixed PHY
+
+Signed-off-by: Vladimir Barinov <vladimir.barinov@cogentembedded.com>
+---
+ drivers/net/ethernet/renesas/ravb_main.c | 24 +++++++++++++++++++-----
+ 1 files changed, 24 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/net/ethernet/renesas/ravb_main.c b/drivers/net/ethernet/renesas/ravb_main.c
+index ba8f63d..65a7a18 100644
+--- a/drivers/net/ethernet/renesas/ravb_main.c
++++ b/drivers/net/ethernet/renesas/ravb_main.c
+@@ -1301,6 +1301,9 @@ static int ravb_phy_init(struct net_device *ndev)
+ 	struct ravb_private *mdp = netdev_priv(ndev);
+ 	struct phy_device *phydev = NULL;
+ 	char phy_id[MII_BUS_ID_SIZE + 3];
++	struct device_node *np = ndev->dev.parent->of_node;
++	struct device_node *pn;
++	int err;
+ 
+ 	mdp->link = 0;
+ 	mdp->speed = 0;
+@@ -1308,11 +1311,22 @@ static int ravb_phy_init(struct net_device *ndev)
+ 
+ 	/* Try connect to PHY */
+ 
+-	snprintf(phy_id, sizeof(phy_id), PHY_ID_FMT,
+-		 mdp->mii_bus->id, mdp->phy_id);
+-
+-	phydev = phy_connect(ndev, phy_id, ravb_adjust_link,
+-			     mdp->phy_interface);
++	/* First try fixed link in order not to break other boards that
++	 * already use old style DT nodes (without "phy-handle")
++	 */
++	if (of_phy_is_fixed_link(np)) {
++		err = of_phy_register_fixed_link(np);
++			if (err)
++				return err;
++		pn = of_node_get(np);
++		phydev = of_phy_connect(ndev, pn, ravb_adjust_link, 0,
++				        mdp->phy_interface);
++	} else {
++		snprintf(phy_id, sizeof(phy_id), PHY_ID_FMT,
++			 mdp->mii_bus->id, mdp->phy_id);
++		phydev = phy_connect(ndev, phy_id, ravb_adjust_link,
++				     mdp->phy_interface);
++	}
+ 
+ 	if (IS_ERR(phydev)) {
+ 		netdev_err(ndev, "failed to connect PHY\n");
+-- 
+1.9.1
+

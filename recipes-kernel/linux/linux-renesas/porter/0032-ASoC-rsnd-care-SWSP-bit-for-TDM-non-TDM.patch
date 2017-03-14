@@ -1,0 +1,78 @@
+From 31f31400e019e8af9937256a1a08357191b41674 Mon Sep 17 00:00:00 2001
+From: Andrey Gusakov <andrey.gusakov@cogentembedded.com>
+Date: Fri, 10 Jun 2016 21:15:10 +0300
+Subject: [PATCH] ASoC: rsnd: care SWSP bit for TDM/non-TDM
+
+SSICR::SWSP bit controls WS signal low/high, but in case of TDM
+it is inverted. This patch solves this issue.
+
+Signed-off-by: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
+Signed-off-by: Mark Brown <broonie@kernel.org>
+Signed-off-by: Andrey Gusakov <andrey.gusakov@cogentembedded.com>
+---
+ sound/soc/sh/rcar/ssi.c |   13 +++++++++----
+ 1 file changed, 9 insertions(+), 4 deletions(-)
+
+diff --git a/sound/soc/sh/rcar/ssi.c b/sound/soc/sh/rcar/ssi.c
+index 8180934..1cbd1d4 100644
+--- a/sound/soc/sh/rcar/ssi.c
++++ b/sound/soc/sh/rcar/ssi.c
+@@ -356,7 +356,9 @@ static int rsnd_ssi_init(struct rsnd_mod *mod,
+ 	struct rsnd_dai_stream *io = rsnd_mod_to_io(mod);
+ 	struct snd_pcm_runtime *runtime = rsnd_io_to_runtime(io);
+ 	u32 cr;
++	int is_tdm;
+ 
++	is_tdm = rsnd_ssi_is_tdm(ssi);
+ 	cr = FORCE;
+ 
+ 	/*
+@@ -364,7 +366,7 @@ static int rsnd_ssi_init(struct rsnd_mod *mod,
+ 	 * see also rsnd_ssi_master_clk_enable()
+ 	 */
+ 	cr |= SWL_32;
+-	if (rsnd_ssi_is_tdm(ssi)) {
++	if (is_tdm) {
+ 		switch (rsnd_ssi_channels(ssi)) {
+ 		case 4:
+ 			cr |= CHNL_TDM_4;
+@@ -411,7 +413,7 @@ static int rsnd_ssi_init(struct rsnd_mod *mod,
+ 
+ 	if (rdai->bit_clk_inv)
+ 		cr |= SCKP;
+-	if (rdai->frm_clk_inv)
++	if (rdai->frm_clk_inv ^ is_tdm)
+ 		cr |= SWSP;
+ 	if (rdai->data_alignment)
+ 		cr |= SDTA;
+@@ -465,6 +467,9 @@ static int rsnd_ssi_init_irq(struct rsnd_mod *mod,
+ 	struct rsnd_dai_stream *io = rsnd_mod_to_io(mod);
+ 	struct snd_pcm_runtime *runtime = rsnd_io_to_runtime(io);
+ 	u32 cr;
++	int is_tdm;
++
++	is_tdm = rsnd_ssi_is_tdm(ssi);
+ 
+ 	cr = FORCE;
+ 
+@@ -473,7 +478,7 @@ static int rsnd_ssi_init_irq(struct rsnd_mod *mod,
+ 	 * see also rsnd_ssi_master_clk_enable()
+ 	 */
+ 	cr |= SWL_32;
+-	if (rsnd_ssi_is_tdm(ssi)) {
++	if (is_tdm) {
+ 		switch (rsnd_ssi_channels(ssi)) {
+ 		case 4:
+ 			cr |= CHNL_TDM_4;
+@@ -520,7 +525,7 @@ static int rsnd_ssi_init_irq(struct rsnd_mod *mod,
+ 
+ 	if (rdai->bit_clk_inv)
+ 		cr |= SCKP;
+-	if (rdai->frm_clk_inv)
++	if (rdai->frm_clk_inv ^ is_tdm)
+ 		cr |= SWSP;
+ 	if (rdai->data_alignment)
+ 		cr |= SDTA;
+-- 
+1.7.10.4
+

@@ -1,0 +1,25 @@
+From 4474e4919ab324979d736d53d05064d4f10bbd28 Mon Sep 17 00:00:00 2001
+From: Andrey Gusakov <andrey.gusakov@cogentembedded.com>
+Date: Fri, 12 Feb 2016 17:55:25 +0300
+Subject: [PATCH 25/31] Radio: add si468x to spidev
+
+
+Signed-off-by: Andrey Gusakov <andrey.gusakov@cogentembedded.com>
+---
+ drivers/spi/spidev.c |    1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/spi/spidev.c b/drivers/spi/spidev.c
+index 354fd4b..794d8d0 100644
+--- a/drivers/spi/spidev.c
++++ b/drivers/spi/spidev.c
+@@ -646,6 +646,7 @@ static int spidev_remove(struct spi_device *spi)
+
+ static const struct of_device_id spidev_dt_ids[] = {
+ 	{ .compatible = "rohm,dh2228fv" },
++	{ .compatible = "si,468x" },
+ 	{},
+ };
+
+--
+1.7.10.4

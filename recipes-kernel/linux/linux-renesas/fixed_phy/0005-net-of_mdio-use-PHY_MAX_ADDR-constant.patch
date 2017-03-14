@@ -1,0 +1,30 @@
+From bed2f9ed2f3c4debe2e930c44ee95af980db7e20 Mon Sep 17 00:00:00 2001
+From: Florian Fainelli <f.fainelli@gmail.com>
+Date: Thu, 5 Dec 2013 14:52:11 -0800
+Subject: [PATCH] net: of_mdio: use PHY_MAX_ADDR constant
+
+Use the PHY_MAX_ADDR constant for checking if a MDIO bus address is
+valid instead of using a plain "32".
+
+Signed-off-by: Florian Fainelli <f.fainelli@gmail.com>
+Signed-off-by: David S. Miller <davem@davemloft.net>
+---
+ drivers/of/of_mdio.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/of/of_mdio.c b/drivers/of/of_mdio.c
+index 82485d2..f93ebca 100644
+--- a/drivers/of/of_mdio.c
++++ b/drivers/of/of_mdio.c
+@@ -107,7 +107,7 @@ int of_mdiobus_register(struct mii_bus *mdio, struct device_node *np)
+ 		}
+ 
+ 		addr = be32_to_cpup(paddr);
+-		if (addr >= 32) {
++		if (addr >= PHY_MAX_ADDR) {
+ 			dev_err(&mdio->dev, "%s PHY address %i is too large\n",
+ 				child->full_name, addr);
+ 			continue;
+-- 
+1.9.1
+

@@ -1,0 +1,45 @@
+From a6c0cc499acddaae73904ca2ae145c7d461e7f37 Mon Sep 17 00:00:00 2001
+From: Grigory Kletsko <grigory.kletsko@cogentembedded.com>
+Date: Wed, 15 Jun 2016 21:42:20 +0300
+Subject: [PATCH] ASoC: rcar: correct 32bit to 24 bit sample conv
+
+---
+ sound/soc/sh/rcar/src.c | 16 +++++++++++++++-
+ 1 file changed, 15 insertions(+), 1 deletion(-)
+
+diff --git a/sound/soc/sh/rcar/src.c b/sound/soc/sh/rcar/src.c
+index bbd7fe5..1fae6c2 100644
+--- a/sound/soc/sh/rcar/src.c
++++ b/sound/soc/sh/rcar/src.c
+@@ -145,6 +145,7 @@ int rsnd_src_ssiu_start(struct rsnd_mod *ssi_mod,
+ 			int use_busif)
+ {
+ 	struct rsnd_dai_stream *io = rsnd_mod_to_io(ssi_mod);
++	struct snd_pcm_runtime *runtime = rsnd_io_to_runtime(io);
+ 	int ssi_id = rsnd_mod_id(ssi_mod);
+
+ 	/*
+@@ -192,7 +193,20 @@ int rsnd_src_ssiu_start(struct rsnd_mod *ssi_mod,
+ 		rsnd_mod_write(ssi_mod, BUSIF_DALIGN, val);
+ 		rsnd_mod_write(ssi_mod, SSI_BUSIF_ADINR,
+ 			       rsnd_get_adinr(ssi_mod));
+-		rsnd_mod_write(ssi_mod, SSI_BUSIF_MODE,  1);
++		/*
++		 * Bit Length of Output Audio Data is limited to 24 bits
++		 * This hack helps to convert (shift) 32 bit samples
++		 * to 24 bit data on i2s bus.
++		 * Without this hack sound will be too quiet.
++		 * Realy not sure why this happens.
++		 */
++		if ((runtime->sample_bits == 32) && (ssi_id == 3))
++			rsnd_mod_write(ssi_mod, SSI_BUSIF_MODE,  1 | (8 << 16));
++		else if ((runtime->sample_bits == 32) && (ssi_id == 4))
++			rsnd_mod_write(ssi_mod, SSI_BUSIF_MODE,  1 | (1 << 20) | (8 << 16));
++		else
++			rsnd_mod_write(ssi_mod, SSI_BUSIF_MODE,  1);
++
+ 		rsnd_mod_write(ssi_mod, SSI_CTRL, 0x1);
+ 	}
+
+--
+2.5.0

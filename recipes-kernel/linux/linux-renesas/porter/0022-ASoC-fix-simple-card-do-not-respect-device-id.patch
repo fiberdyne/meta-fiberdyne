@@ -1,0 +1,37 @@
+From 1bee53bce7b8bf48f70e8b22272dceb47dbfc29e Mon Sep 17 00:00:00 2001
+From: Andrey Gusakov <andrey.gusakov@cogentembedded.com>
+Date: Wed, 17 Feb 2016 17:45:17 +0300
+Subject: [PATCH 22/31] ASoC: fix simple-card do not respect device id
+
+
+Signed-off-by: Andrey Gusakov <andrey.gusakov@cogentembedded.com>
+---
+ sound/soc/generic/simple-card.c |   13 -------------
+ 1 file changed, 13 deletions(-)
+
+diff --git a/sound/soc/generic/simple-card.c b/sound/soc/generic/simple-card.c
+index 9556644..0bad6f0 100644
+--- a/sound/soc/generic/simple-card.c
++++ b/sound/soc/generic/simple-card.c
+@@ -435,19 +435,6 @@ static int asoc_simple_card_probe(struct platform_device *pdev)
+ 				dev_err(dev, "parse error %d\n", ret);
+ 			goto err;
+ 		}
+-
+-		/*
+-		 * soc_bind_dai_link() will check cpu name
+-		 * after of_node matching if dai_link has cpu_dai_name.
+-		 * but, it will never match if name was created by fmt_single_name()
+-		 * remove cpu_dai_name to escape name matching.
+-		 * see
+-		 *	fmt_single_name()
+-		 *	fmt_multiple_name()
+-		 */
+-		if (num_links == 1)
+-			dai_link->cpu_dai_name = NULL;
+-
+ 	} else {
+ 		struct asoc_simple_card_info *cinfo;
+
+--
+1.7.10.4

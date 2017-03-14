@@ -1,0 +1,35 @@
+From 563ca49681d5393ed295310a7835660642f59677 Mon Sep 17 00:00:00 2001
+From: "Damien.Horsley" <Damien.Horsley@imgtec.com>
+Date: Tue, 8 Dec 2015 15:58:58 +0000
+Subject: [PATCH 14/16] ASoC: Add SOC_DOUBLE_STS macro
+
+Add SOC_DOUBLE_STS macro for read-only volatile status controls
+
+Signed-off-by: Damien.Horsley <Damien.Horsley@imgtec.com>
+Signed-off-by: Mark Brown <broonie@kernel.org>
+Signed-off-by: Andrey Gusakov <andrey.gusakov@cogentembedded.com>
+---
+ include/sound/soc.h |    8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/include/sound/soc.h b/include/sound/soc.h
+index 645bea2..936bddb 100644
+--- a/include/sound/soc.h
++++ b/include/sound/soc.h
+@@ -99,6 +99,14 @@
+ 	.put = snd_soc_put_volsw, \
+ 	.private_value = SOC_DOUBLE_VALUE(reg, shift_left, shift_right, \
+ 					  max, invert) }
++#define SOC_DOUBLE_STS(xname, reg, shift_left, shift_right, max, invert) \
++{									\
++	.iface = SNDRV_CTL_ELEM_IFACE_MIXER, .name = (xname),		\
++	.info = snd_soc_info_volsw, .get = snd_soc_get_volsw,		\
++	.access = SNDRV_CTL_ELEM_ACCESS_READ |				\
++		SNDRV_CTL_ELEM_ACCESS_VOLATILE,				\
++	.private_value = SOC_DOUBLE_VALUE(reg, shift_left, shift_right,	\
++					  max, invert) }
+ #define SOC_DOUBLE_R(xname, reg_left, reg_right, xshift, xmax, xinvert) \
+ {	.iface = SNDRV_CTL_ELEM_IFACE_MIXER, .name = (xname), \
+ 	.info = snd_soc_info_volsw, \
+--
+1.7.10.4

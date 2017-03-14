@@ -1,0 +1,1349 @@
+From 57b79efbc059c80c3e850fbd1363553ad86add31 Mon Sep 17 00:00:00 2001
+From: Konstantin Kozhevnikov <Konstantin.Kozhevnikov@cogentembedded.com>
+Date: Fri, 12 Jun 2015 07:53:09 -0700
+Subject: [PATCH] AVB support (Lager, Koelsch)
+
+---
+ arch/arm/boot/dts/Makefile                       |    5 +
+ arch/arm/boot/dts/r8a7790-lager-eavb.dts         |  514 ++++++++++++++++++++
+ arch/arm/boot/dts/r8a7791-koelsch-eavb.dts       |  540 ++++++++++++++++++++++
+ arch/arm/boot/dts/r8a7791.dtsi                   |   11 +
+ arch/arm/mach-shmobile/board-koelsch-reference.c |   11 +
+ arch/arm/mach-shmobile/board-lager-reference.c   |    6 +
+ drivers/net/ethernet/renesas/ravb_main.c         |    1 +
+ drivers/pinctrl/sh-pfc/pfc-r8a7791.c             |   67 +++
+ include/dt-bindings/clock/r8a7791-clock.h        |    1 +
+ 9 files changed, 1156 insertions(+)
+ create mode 100644 arch/arm/boot/dts/r8a7790-lager-eavb.dts
+ create mode 100644 arch/arm/boot/dts/r8a7791-koelsch-eavb.dts
+
+diff --git a/arch/arm/boot/dts/Makefile b/arch/arm/boot/dts/Makefile
+index 5482be6..a93738b 100644
+--- a/arch/arm/boot/dts/Makefile
++++ b/arch/arm/boot/dts/Makefile
+@@ -226,6 +226,11 @@ dtb-$(CONFIG_ARCH_VT8500) += vt8500-bv07.dtb \
+ dtb-$(CONFIG_ARCH_ZYNQ) += zynq-zc702.dtb \
+ 	zynq-zc706.dtb
+ 
++# R-Car Gen2 AVB variants
++dtb-$(CONFIG_ARCH_SHMOBILE_MULTI) += \
++	r8a7791-koelsch-eavb.dtb \
++	r8a7790-lager-eavb.dtb
++
+ targets += dtbs
+ targets += $(dtb-y)
+ endif
+diff --git a/arch/arm/boot/dts/r8a7790-lager-eavb.dts b/arch/arm/boot/dts/r8a7790-lager-eavb.dts
+new file mode 100644
+index 0000000..a356f8a
+--- /dev/null
++++ b/arch/arm/boot/dts/r8a7790-lager-eavb.dts
+@@ -0,0 +1,514 @@
++/*
++ * Device Tree Source for the Lager board
++ *
++ * Copyright (C) 2014 Renesas Electronics Corporation
++ * Copyright (C) 2013-2014 Renesas Solutions Corp.
++ * Copyright (C) 2014 Cogent Embedded, Inc.
++ *
++ * This file is licensed under the terms of the GNU General Public License
++ * version 2.  This program is licensed "as is" without any warranty of any
++ * kind, whether express or implied.
++ */
++
++/*
++ * SSI-AK4643
++ *
++ * SW1: 1: AK4643
++ *      2: CN22
++ *      3: ADV7511
++ *
++ * this command is required when playback.
++ *
++ * # amixer set "LINEOUT Mixer DACL" on
++ * # amixer set "Playback" 100
++ */
++
++/dts-v1/;
++#include "r8a7790.dtsi"
++#include <dt-bindings/gpio/gpio.h>
++#include <dt-bindings/input/input.h>
++
++/ {
++	model = "Lager";
++	compatible = "renesas,lager", "renesas,r8a7790";
++
++	aliases {
++		serial6 = &scif0;
++		serial7 = &scif1;
++	};
++
++	chosen {
++		bootargs = "console=ttySC6,38400 ignore_loglevel rw root=/dev/mmcblk0p1 ip=none";
++	};
++
++	memory@40000000 {
++		device_type = "memory";
++		reg = <0 0x40000000 0 0x40000000>;
++	};
++
++	memory@140000000 {
++		device_type = "memory";
++		reg = <1 0x40000000 0 0xc0000000>;
++	};
++
++	lbsc {
++		#address-cells = <1>;
++		#size-cells = <1>;
++	};
++
++	gpio-keys {
++		compatible = "gpio-keys";
++
++		button@1 {
++			linux,code = <KEY_1>;
++			label = "SW2-1";
++			gpio-key,wakeup;
++			debounce-interval = <20>;
++			gpios = <&gpio1 14 GPIO_ACTIVE_LOW>;
++		};
++		button@2 {
++			linux,code = <KEY_2>;
++			label = "SW2-2";
++			gpio-key,wakeup;
++			debounce-interval = <20>;
++			gpios = <&gpio1 24 GPIO_ACTIVE_LOW>;
++		};
++		button@3 {
++			linux,code = <KEY_3>;
++			label = "SW2-3";
++			gpio-key,wakeup;
++			debounce-interval = <20>;
++			gpios = <&gpio1 26 GPIO_ACTIVE_LOW>;
++		};
++		button@4 {
++			linux,code = <KEY_4>;
++			label = "SW2-4";
++			gpio-key,wakeup;
++			debounce-interval = <20>;
++			gpios = <&gpio1 28 GPIO_ACTIVE_LOW>;
++		};
++	};
++
++	leds {
++		compatible = "gpio-leds";
++		led6 {
++			gpios = <&gpio4 22 GPIO_ACTIVE_HIGH>;
++		};
++		led7 {
++			gpios = <&gpio4 23 GPIO_ACTIVE_HIGH>;
++		};
++		led8 {
++			gpios = <&gpio5 17 GPIO_ACTIVE_HIGH>;
++		};
++	};
++
++	fixedregulator3v3: fixedregulator@0 {
++		compatible = "regulator-fixed";
++		regulator-name = "fixed-3.3V";
++		regulator-min-microvolt = <3300000>;
++		regulator-max-microvolt = <3300000>;
++		regulator-boot-on;
++		regulator-always-on;
++	};
++
++	vcc_sdhi0: regulator@1 {
++		compatible = "regulator-fixed";
++
++		regulator-name = "SDHI0 Vcc";
++		regulator-min-microvolt = <3300000>;
++		regulator-max-microvolt = <3300000>;
++
++		gpio = <&gpio5 24 GPIO_ACTIVE_HIGH>;
++		enable-active-high;
++	};
++
++	vccq_sdhi0: regulator@2 {
++		compatible = "regulator-gpio";
++
++		regulator-name = "SDHI0 VccQ";
++		regulator-min-microvolt = <1800000>;
++		regulator-max-microvolt = <3300000>;
++
++		gpios = <&gpio5 29 GPIO_ACTIVE_HIGH>;
++		gpios-states = <1>;
++		states = <3300000 1
++			  1800000 0>;
++	};
++
++	vcc_sdhi2: regulator@3 {
++		compatible = "regulator-fixed";
++
++		regulator-name = "SDHI2 Vcc";
++		regulator-min-microvolt = <3300000>;
++		regulator-max-microvolt = <3300000>;
++
++		gpio = <&gpio5 25 GPIO_ACTIVE_HIGH>;
++		enable-active-high;
++	};
++
++	vccq_sdhi2: regulator@4 {
++		compatible = "regulator-gpio";
++
++		regulator-name = "SDHI2 VccQ";
++		regulator-min-microvolt = <1800000>;
++		regulator-max-microvolt = <3300000>;
++
++		gpios = <&gpio5 30 GPIO_ACTIVE_HIGH>;
++		gpios-states = <1>;
++		states = <3300000 1
++			  1800000 0>;
++	};
++
++	hdmi_transmitter: adv7511 {
++		compatible = "adi,adv7511";
++		gpios = <&gpio1 15 GPIO_ACTIVE_LOW>;
++
++		adi,input-style = <0x02>;
++		adi,input-id = <0x00>;
++		adi,input-color-depth = <0x03>;
++		adi,sync-pulse = <0x03>;
++		adi,bit-justification = <0x01>;
++		adi,up-conversion = <0x00>;
++		adi,timing-generation-sequence = <0x00>;
++		adi,vsync-polarity = <0x02>;
++		adi,hsync-polarity = <0x02>;
++		adi,clock-delay = <0x03>;
++	};
++};
++
++&extal_clk {
++	clock-frequency = <20000000>;
++};
++
++&pfc {
++	pinctrl-0 = <&du_pins &usb0_pins &usb1_pins &usb2_pins &sound_pins &sound_clk_pins>;
++	pinctrl-names = "default";
++
++	du_pins: du {
++		renesas,groups = "du_rgb666", "du_sync_1", "du_clk_out_0";
++		renesas,function = "du";
++	};
++
++	scif0_pins: serial6 {
++		renesas,groups = "scif0_data";
++		renesas,function = "scif0";
++	};
++
++	scif1_pins: serial7 {
++		renesas,groups = "scif1_data";
++		renesas,function = "scif1";
++	};
++
++	ether_pins: ether {
++		renesas,groups = "eth_link", "eth_mdio", "eth_rmii";
++		renesas,function = "eth";
++	};
++
++	avb_pins: avb {
++		renesas,groups = "avb_mdio", "avb_gmii";
++		renesas,function = "avb";
++	};
++
++	mlb3_pins: mlp {
++		renesas,groups = "mlb3pin";
++		renesas,function = "mlb3pin";
++	};
++
++	phy1_pins: phy1 {
++		renesas,groups = "intc_irq0";
++		renesas,function = "intc";
++	};
++
++	sdhi0_pins: sd0 {
++		renesas,groups = "sdhi0_data4", "sdhi0_ctrl";
++		renesas,function = "sdhi0";
++	};
++
++	sdhi2_pins: sd2 {
++		renesas,groups = "sdhi2_data4", "sdhi2_ctrl";
++		renesas,function = "sdhi2";
++	};
++
++	mmc1_pins: mmc1 {
++		renesas,groups = "mmc1_data8", "mmc1_ctrl";
++		renesas,function = "mmc1";
++	};
++
++	qspi_pins: spi0 {
++		renesas,groups = "qspi_ctrl", "qspi_data4";
++		renesas,function = "qspi";
++	};
++
++	msiof1_pins: spi2 {
++		renesas,groups = "msiof1_clk", "msiof1_sync", "msiof1_rx",
++				 "msiof1_tx";
++		renesas,function = "msiof1";
++	};
++
++	usb0_pins: usb0 {
++		renesas,groups = "usb0_ovc_vbus";
++		renesas,function = "usb0";
++	};
++
++	usb1_pins: usb1 {
++		renesas,groups = "usb1";
++		renesas,function = "usb1";
++	};
++
++	usb2_pins: usb2 {
++		renesas,groups = "usb2";
++		renesas,function = "usb2";
++	};
++
++	sound_pins: sound {
++		renesas,groups = "ssi0129_ctrl", "ssi0_data", "ssi1_data";
++		renesas,function = "ssi";
++	};
++	sound_clk_pins: sound_clk {
++		renesas,groups = "audio_clk_a";
++		renesas,function = "audio_clk";
++	};
++
++	i2c1_pins: i2c1 {
++		renesas,groups = "i2c1";
++		renesas,function = "i2c1";
++	};
++
++	i2c2_pins: i2c2 {
++		renesas,groups = "i2c2";
++		renesas,function = "i2c2";
++	};
++
++	iic3_pins: iic3 {
++		renesas,groups = "iic3";
++		renesas,function = "iic3";
++	};
++
++	vin0_pins: vin0 {
++		renesas,groups = "vin0_data24", "vin0_sync", "vin0_field",
++				 "vin0_clkenb", "vin0_clk";
++		renesas,function = "vin0";
++	};
++
++	vin1_pins: vin1 {
++		renesas,groups = "vin1_data8", "vin1_clk";
++		renesas,function = "vin1";
++	};
++
++	usb0_pins: usb0 {
++		renesas,groups = "usb0";
++		renesas,function = "usb0";
++	};
++
++	usb1_pins: usb1 {
++		renesas,groups = "usb1";
++		renesas,function = "usb1";
++	};
++
++	usb2_pins: usb2 {
++		renesas,groups = "usb2";
++		renesas,function = "usb2";
++	};
++};
++
++&ether {
++	pinctrl-0 = <&ether_pins &phy1_pins>;
++	pinctrl-names = "default";
++
++	phy-handle = <&phy1>;
++	renesas,ether-link-active-low;
++	status = "okay";
++
++	phy1: ethernet-phy@1 {
++		reg = <1>;
++		interrupt-parent = <&irqc0>;
++		interrupts = <0 IRQ_TYPE_LEVEL_LOW>;
++		micrel,led-mode = <1>;
++	};
++};
++
++&avb {
++	pinctrl-0 = <&avb_pins>;
++	pinctrl-names = "default";
++
++	renesas,no-ether-link;
++	renesas,phy = <0>;
++	phy-int-gpio = <&gpio2 15 GPIO_ACTIVE_LOW>;
++	phy-reset-gpio = <&gpio4 10 0>;
++	status = "okay";
++};
++
++&mmcif1 {
++	pinctrl-0 = <&mmc1_pins>;
++	pinctrl-names = "default";
++
++	vmmc-supply = <&fixedregulator3v3>;
++	bus-width = <8>;
++	non-removable;
++	status = "okay";
++};
++
++&sata1 {
++	status = "okay";
++};
++
++&qspi {
++	pinctrl-0 = <&qspi_pins>;
++	pinctrl-names = "default";
++
++	status = "okay";
++
++	flash: flash@0 {
++		#address-cells = <1>;
++		#size-cells = <1>;
++		compatible = "spansion,s25fl512s";
++		reg = <0>;
++		spi-max-frequency = <30000000>;
++		spi-tx-bus-width = <4>;
++		spi-rx-bus-width = <4>;
++		m25p,fast-read;
++		spi-cpol;
++		spi-cpha;
++
++		partition@0 {
++			label = "loader";
++			reg = <0x00000000 0x00040000>;
++			read-only;
++		};
++		partition@40000 {
++			label = "user";
++			reg = <0x00040000 0x00400000>;
++			read-only;
++		};
++		partition@440000 {
++			label = "flash";
++			reg = <0x00440000 0x03bc0000>;
++		};
++	};
++};
++
++&msiof1 {
++	pinctrl-0 = <&msiof1_pins>;
++	pinctrl-names = "default";
++
++	status = "okay";
++
++	pmic: pmic@0 {
++		compatible = "renesas,r2a11302ft";
++		reg = <0>;
++		spi-max-frequency = <6000000>;
++		spi-cpol;
++		spi-cpha;
++	};
++};
++
++&scif0 {
++	pinctrl-0 = <&scif0_pins>;
++	pinctrl-names = "default";
++
++	status = "okay";
++};
++
++&scif1 {
++	pinctrl-0 = <&scif1_pins>;
++	pinctrl-names = "default";
++
++	status = "okay";
++};
++
++&sdhi0 {
++	pinctrl-0 = <&sdhi0_pins>;
++	pinctrl-names = "default";
++
++	vmmc-supply = <&vcc_sdhi0>;
++	vqmmc-supply = <&vccq_sdhi0>;
++	cd-gpios = <&gpio3 6 GPIO_ACTIVE_LOW>;
++	toshiba,mmc-wrprotect-disable;
++	status = "okay";
++};
++
++&sdhi2 {
++	pinctrl-0 = <&sdhi2_pins>;
++	pinctrl-names = "default";
++
++	vmmc-supply = <&vcc_sdhi2>;
++	vqmmc-supply = <&vccq_sdhi2>;
++	cd-gpios = <&gpio3 22 GPIO_ACTIVE_LOW>;
++	toshiba,mmc-wrprotect-disable;
++	status = "okay";
++};
++
++&cpu0 {
++	cpu0-supply = <&vdd_dvfs>;
++};
++
++&i2c0	{
++	status = "ok";
++};
++
++&i2c1	{
++	status = "ok";
++	pinctrl-0 = <&i2c1_pins>;
++	pinctrl-names = "default";
++};
++
++&i2c2	{
++	status = "ok";
++	clock-frequency = <400000>;
++	pinctrl-0 = <&i2c2_pins>;
++	pinctrl-names = "default";
++
++	snd_codec: ak4643 {
++		#sound-dai-cells = <0>;
++		compatible = "asahi-kasei,ak4643";
++		reg = <0x12>;
++	};
++};
++
++&iic3 {
++	pinctrl-names = "default";
++	pinctrl-0 = <&iic3_pins>;
++	status = "okay";
++
++	vdd_dvfs: regulator@68 {
++		compatible = "diasemi,da9210";
++		reg = <0x68>;
++
++		regulator-min-microvolt = <1000000>;
++		regulator-max-microvolt = <1000000>;
++		regulator-boot-on;
++		regulator-always-on;
++	};
++};
++
++&usbphy {
++	status = "okay";
++};
++
++&mlp {
++	pinctrl-names = "default";
++	pinctrl-0 = <&mlb3_pins>;
++	status = "okay";
++};
++
++&xhci {
++	status = "okay";
++};
++
++&pci0 {
++	status = "okay";
++	pinctrl-0 = <&usb0_pins>;
++	pinctrl-names = "default";
++};
++
++&pci1 {
++	status = "okay";
++	pinctrl-0 = <&usb1_pins>;
++	pinctrl-names = "default";
++};
++
++&pci2 {
++	status = "okay";
++	pinctrl-0 = <&usb2_pins>;
++	pinctrl-names = "default";
++};
+diff --git a/arch/arm/boot/dts/r8a7791-koelsch-eavb.dts b/arch/arm/boot/dts/r8a7791-koelsch-eavb.dts
+new file mode 100644
+index 0000000..806b0cf
+--- /dev/null
++++ b/arch/arm/boot/dts/r8a7791-koelsch-eavb.dts
+@@ -0,0 +1,540 @@
++/*
++ * Device Tree Source for the Koelsch board
++ *
++ * Copyright (C) 2013-2014 Renesas Electronics Corporation
++ * Copyright (C) 2013-2014 Renesas Solutions Corp.
++ * Copyright (C) 2014 Cogent Embedded, Inc.
++ *
++ * This file is licensed under the terms of the GNU General Public License
++ * version 2.  This program is licensed "as is" without any warranty of any
++ * kind, whether express or implied.
++ */
++
++/*
++ * SSI-AK4643
++ *
++ * SW1: 1: AK4643
++ *      2: CN22
++ *      3: ADV7511
++ *
++ * this command is required when playback.
++ *
++ * # amixer set "LINEOUT Mixer DACL" on
++ * # amixer set "Playback" 100
++ */
++
++/dts-v1/;
++#include "r8a7791.dtsi"
++#include <dt-bindings/gpio/gpio.h>
++#include <dt-bindings/input/input.h>
++
++/ {
++	model = "Koelsch";
++	compatible = "renesas,koelsch", "renesas,r8a7791";
++
++	aliases {
++		serial6 = &scif0;
++		serial7 = &scif1;
++		serial16 = &hscif1;
++	};
++
++	chosen {
++		bootargs = "console=ttySC6,38400 ignore_loglevel rw root=/dev/mmcblk0p1 ip=none";
++	};
++
++	memory@40000000 {
++		device_type = "memory";
++		reg = <0 0x40000000 0 0x40000000>;
++	};
++
++	memory@200000000 {
++		device_type = "memory";
++		reg = <2 0x00000000 0 0x40000000>;
++	};
++
++	lbsc {
++		#address-cells = <1>;
++		#size-cells = <1>;
++	};
++
++	gpio-keys {
++		compatible = "gpio-keys";
++
++		key-a {
++			gpios = <&gpio7 0 GPIO_ACTIVE_LOW>;
++			linux,code = <KEY_A>;
++			label = "SW30";
++			gpio-key,wakeup;
++			debounce-interval = <20>;
++		};
++		key-b {
++			gpios = <&gpio7 1 GPIO_ACTIVE_LOW>;
++			linux,code = <KEY_B>;
++			label = "SW31";
++			gpio-key,wakeup;
++			debounce-interval = <20>;
++		};
++		key-c {
++			gpios = <&gpio7 2 GPIO_ACTIVE_LOW>;
++			linux,code = <KEY_C>;
++			label = "SW32";
++			gpio-key,wakeup;
++			debounce-interval = <20>;
++		};
++		key-d {
++			gpios = <&gpio7 3 GPIO_ACTIVE_LOW>;
++			linux,code = <KEY_D>;
++			label = "SW33";
++			gpio-key,wakeup;
++			debounce-interval = <20>;
++		};
++		key-e {
++			gpios = <&gpio7 4 GPIO_ACTIVE_LOW>;
++			linux,code = <KEY_E>;
++			label = "SW34";
++			gpio-key,wakeup;
++			debounce-interval = <20>;
++		};
++		key-f {
++			gpios = <&gpio7 5 GPIO_ACTIVE_LOW>;
++			linux,code = <KEY_F>;
++			label = "SW35";
++			gpio-key,wakeup;
++			debounce-interval = <20>;
++		};
++		key-g {
++			gpios = <&gpio7 6 GPIO_ACTIVE_LOW>;
++			linux,code = <KEY_G>;
++			label = "SW36";
++			gpio-key,wakeup;
++			debounce-interval = <20>;
++		};
++	};
++
++	leds {
++		compatible = "gpio-leds";
++		led6 {
++			gpios = <&gpio2 19 GPIO_ACTIVE_HIGH>;
++		};
++		led7 {
++			gpios = <&gpio2 20 GPIO_ACTIVE_HIGH>;
++		};
++		led8 {
++			gpios = <&gpio2 21 GPIO_ACTIVE_HIGH>;
++		};
++	};
++
++	vcc_sdhi0: regulator@0 {
++		compatible = "regulator-fixed";
++
++		regulator-name = "SDHI0 Vcc";
++		regulator-min-microvolt = <3300000>;
++		regulator-max-microvolt = <3300000>;
++
++		gpio = <&gpio7 17 GPIO_ACTIVE_HIGH>;
++		enable-active-high;
++	};
++
++	vccq_sdhi0: regulator@1 {
++		compatible = "regulator-gpio";
++
++		regulator-name = "SDHI0 VccQ";
++		regulator-min-microvolt = <1800000>;
++		regulator-max-microvolt = <3300000>;
++
++		gpios = <&gpio2 12 GPIO_ACTIVE_HIGH>;
++		gpios-states = <1>;
++		states = <3300000 1
++			  1800000 0>;
++	};
++
++	vcc_sdhi1: regulator@2 {
++		compatible = "regulator-fixed";
++
++		regulator-name = "SDHI1 Vcc";
++		regulator-min-microvolt = <3300000>;
++		regulator-max-microvolt = <3300000>;
++
++		gpio = <&gpio7 18 GPIO_ACTIVE_HIGH>;
++		enable-active-high;
++	};
++
++	vccq_sdhi1: regulator@3 {
++		compatible = "regulator-gpio";
++
++		regulator-name = "SDHI1 VccQ";
++		regulator-min-microvolt = <1800000>;
++		regulator-max-microvolt = <3300000>;
++
++		gpios = <&gpio2 13 GPIO_ACTIVE_HIGH>;
++		gpios-states = <1>;
++		states = <3300000 1
++			  1800000 0>;
++	};
++
++	vcc_sdhi2: regulator@4 {
++		compatible = "regulator-fixed";
++
++		regulator-name = "SDHI2 Vcc";
++		regulator-min-microvolt = <3300000>;
++		regulator-max-microvolt = <3300000>;
++
++		gpio = <&gpio7 19 GPIO_ACTIVE_HIGH>;
++		enable-active-high;
++	};
++
++	vccq_sdhi2: regulator@5 {
++		compatible = "regulator-gpio";
++
++		regulator-name = "SDHI2 VccQ";
++		regulator-min-microvolt = <1800000>;
++		regulator-max-microvolt = <3300000>;
++
++		gpios = <&gpio2 26 GPIO_ACTIVE_HIGH>;
++		gpios-states = <1>;
++		states = <3300000 1
++			  1800000 0>;
++	};
++
++	hdmi_transmitter: adv7511 {
++		compatible = "adi,adv7511";
++		gpios = <&gpio3 29 GPIO_ACTIVE_LOW>;
++
++		adi,input-style = <0x02>;
++		adi,input-id = <0x00>;
++		adi,input-color-depth = <0x03>;
++		adi,sync-pulse = <0x03>;
++		adi,bit-justification = <0x01>;
++		adi,up-conversion = <0x00>;
++		adi,timing-generation-sequence = <0x00>;
++		adi,vsync-polarity = <0x02>;
++		adi,hsync-polarity = <0x02>;
++		adi,clock-delay = <0x03>;
++	};
++};
++
++&extal_clk {
++	clock-frequency = <20000000>;
++};
++
++&pfc {
++	pinctrl-0 = <&du_pins &usb0_pins &usb1_pins &sound_pins &sound_clk_pins &vin0_pins>;
++	pinctrl-names = "default";
++
++	i2c2_pins: i2c2 {
++		renesas,groups = "i2c2";
++		renesas,function = "i2c2";
++	};
++
++	du_pins: du {
++		renesas,groups = "du_rgb666", "du_sync", "du_clk_out_0";
++		renesas,function = "du";
++	};
++
++	scif0_pins: serial6 {
++		renesas,groups = "scif0_data_d";
++		renesas,function = "scif0";
++	};
++
++	scif1_pins: serial7 {
++		renesas,groups = "scif1_data_d";
++		renesas,function = "scif1";
++	};
++
++	hscif1_pins: serial16 {
++		renesas,groups = "hscif1_data", "hscif1_ctrl";
++		renesas,function = "hscif1";
++	};
++
++	ether_pins: ether {
++		renesas,groups = "eth_link", "eth_mdio", "eth_rmii";
++		renesas,function = "eth";
++	};
++
++	avb_pins: avb {
++		renesas,groups = "avb_mdio", "avb_gmii";
++		renesas,function = "avb";
++	};
++
++	phy1_pins: phy1 {
++		renesas,groups = "intc_irq0";
++		renesas,function = "intc";
++	};
++
++	sdhi0_pins: sd0 {
++		renesas,groups = "sdhi0_data4", "sdhi0_ctrl";
++		renesas,function = "sdhi0";
++	};
++
++	sdhi1_pins: sd1 {
++		renesas,groups = "sdhi1_data4", "sdhi1_ctrl";
++		renesas,function = "sdhi1";
++	};
++
++	sdhi2_pins: sd2 {
++		renesas,groups = "sdhi2_data4", "sdhi2_ctrl";
++		renesas,function = "sdhi2";
++	};
++
++	qspi_pins: spi0 {
++		renesas,groups = "qspi_ctrl", "qspi_data4";
++		renesas,function = "qspi";
++	};
++
++	msiof0_pins: spi1 {
++		renesas,groups = "msiof0_clk", "msiof0_sync", "msiof0_rx",
++				 "msiof0_tx";
++		renesas,function = "msiof0";
++	};
++
++	msiof1_pins: spi2 {
++		renesas,groups = "msiof1_clk_c", "msiof1_sync_c", "msiof1_rx_c",
++				 "msiof1_tx_c";
++		renesas,function = "msiof1";
++	};
++
++	usb0_pins: usb0 {
++		renesas,groups = "usb0";
++		renesas,function = "usb0";
++	};
++
++	usb1_pins: usb1 {
++		renesas,groups = "usb1";
++		renesas,function = "usb1";
++	};
++
++	sound_pins: sound {
++		renesas,groups = "ssi0129_ctrl", "ssi0_data", "ssi1_data";
++		renesas,function = "ssi";
++	};
++	sound_clk_pins: sound_clk {
++		renesas,groups = "audio_clk_a";
++		renesas,function = "audio_clk";
++	};
++
++	i2c6_pins: i2c6 {
++		renesas,groups = "i2c6";
++		renesas,function = "i2c6";
++	};
++
++	vin0_pins: vin0 {
++		renesas,groups = "vin0_data24", "vin0_sync", "vin0_field",
++				 "vin0_clkenb", "vin0_clk";
++		renesas,function = "vin0";
++	};
++
++	vin1_pins: vin1 {
++		renesas,groups = "vin1_data8", "vin1_clk";
++		renesas,function = "vin1";
++	};
++
++	usb0_pins: usb0 {
++		renesas,groups = "usb0";
++		renesas,function = "usb0";
++	};
++
++	usb1_pins: usb1 {
++		renesas,groups = "usb1";
++		renesas,function = "usb1";
++	};
++};
++
++&ether {
++	pinctrl-0 = <&ether_pins &phy1_pins>;
++	pinctrl-names = "default";
++
++	phy-handle = <&phy1>;
++	renesas,ether-link-active-low;
++	status = "disabled";
++
++	phy1: ethernet-phy@1 {
++		reg = <1>;
++		interrupt-parent = <&irqc0>;
++		interrupts = <0 IRQ_TYPE_LEVEL_LOW>;
++		micrel,led-mode = <1>;
++	};
++};
++
++&avb {
++	pinctrl-0 = <&avb_pins>;
++	pinctrl-names = "default";
++
++	renesas,no-ether-link;
++	renesas,phy = <0>;
++	phy-int-gpio = <&gpio5 16 GPIO_ACTIVE_LOW>;
++	status = "okay";
++};
++
++&sata0 {
++	status = "okay";
++};
++
++&scif0 {
++	pinctrl-0 = <&scif0_pins>;
++	pinctrl-names = "default";
++
++	status = "okay";
++};
++
++&scif1 {
++	pinctrl-0 = <&scif1_pins>;
++	pinctrl-names = "default";
++
++	status = "okay";
++};
++
++&hscif1 {
++	pinctrl-0 = <&hscif1_pins>;
++	pinctrl-names = "default";
++};
++
++&sdhi0 {
++	pinctrl-0 = <&sdhi0_pins>;
++	pinctrl-names = "default";
++
++	vmmc-supply = <&vcc_sdhi0>;
++	vqmmc-supply = <&vccq_sdhi0>;
++	cd-gpios = <&gpio6 6 GPIO_ACTIVE_LOW>;
++	wp-gpios = <&gpio6 7 GPIO_ACTIVE_HIGH>;
++	status = "okay";
++};
++
++&sdhi1 {
++	pinctrl-0 = <&sdhi1_pins>;
++	pinctrl-names = "default";
++
++	vmmc-supply = <&vcc_sdhi1>;
++	vqmmc-supply = <&vccq_sdhi1>;
++	cd-gpios = <&gpio6 14 GPIO_ACTIVE_LOW>;
++	wp-gpios = <&gpio6 15 GPIO_ACTIVE_HIGH>;
++	status = "okay";
++};
++
++&sdhi2 {
++	pinctrl-0 = <&sdhi2_pins>;
++	pinctrl-names = "default";
++
++	vmmc-supply = <&vcc_sdhi2>;
++	vqmmc-supply = <&vccq_sdhi2>;
++	cd-gpios = <&gpio6 22 GPIO_ACTIVE_LOW>;
++	toshiba,mmc-wrprotect-disable;
++	status = "okay";
++};
++
++&qspi {
++	pinctrl-0 = <&qspi_pins>;
++	pinctrl-names = "default";
++
++	status = "okay";
++
++	flash: flash@0 {
++		#address-cells = <1>;
++		#size-cells = <1>;
++		compatible = "spansion,s25fl512s";
++		reg = <0>;
++		spi-max-frequency = <30000000>;
++		spi-tx-bus-width = <4>;
++		spi-rx-bus-width = <4>;
++		m25p,fast-read;
++		spi-cpol;
++		spi-cpha;
++
++		partition@0 {
++			label = "loader";
++			reg = <0x00000000 0x00040000>;
++			read-only;
++		};
++		partition@40000 {
++			label = "user";
++			reg = <0x00040000 0x00400000>;
++			read-only;
++		};
++		partition@440000 {
++			label = "flash";
++			reg = <0x00440000 0x03bc0000>;
++		};
++	};
++};
++
++&msiof0 {
++	pinctrl-0 = <&msiof0_pins>;
++	pinctrl-names = "default";
++
++	status = "okay";
++
++	pmic: pmic@0 {
++		compatible = "renesas,r2a11302ft";
++		reg = <0>;
++		spi-max-frequency = <6000000>;
++		spi-cpol;
++		spi-cpha;
++	};
++};
++
++&msiof1 {
++	pinctrl-0 = <&msiof1_pins>;
++	pinctrl-names = "default";
++
++	status = "okay";
++};
++
++&i2c2 {
++	pinctrl-0 = <&i2c2_pins>;
++	pinctrl-names = "default";
++
++	status = "okay";
++	clock-frequency = <400000>;
++
++	eeprom@50 {
++		compatible = "renesas,24c02";
++		reg = <0x50>;
++		pagesize = <16>;
++	};
++
++	snd_codec: ak4643 {
++		#sound-dai-cells = <0>;
++		compatible = "asahi-kasei,ak4643";
++		reg = <0x12>;
++	};
++};
++
++&i2c6 {
++	pinctrl-names = "default";
++	pinctrl-0 = <&i2c6_pins>;
++	status = "okay";
++	clock-frequency = <100000>;
++
++	vdd_dvfs: regulator@68 {
++		compatible = "diasemi,da9210";
++		reg = <0x68>;
++
++		regulator-min-microvolt = <1000000>;
++		regulator-max-microvolt = <1000000>;
++		regulator-boot-on;
++		regulator-always-on;
++	};
++};
++
++&pci0 {
++	status = "okay";
++	pinctrl-0 = <&usb0_pins>;
++	pinctrl-names = "default";
++};
++
++&pci1 {
++	status = "okay";
++	pinctrl-0 = <&usb1_pins>;
++	pinctrl-names = "default";
++};
++
++&pcie_bus_clk {
++	status = "okay";
++};
++
++&pciec {
++	status = "okay";
++};
++
++&cpu0 {
++	cpu0-supply = <&vdd_dvfs>;
++};
+diff --git a/arch/arm/boot/dts/r8a7791.dtsi b/arch/arm/boot/dts/r8a7791.dtsi
+index 7c0e5c1..aa76272 100644
+--- a/arch/arm/boot/dts/r8a7791.dtsi
++++ b/arch/arm/boot/dts/r8a7791.dtsi
+@@ -614,6 +614,17 @@
+ 		status = "disabled";
+ 	};
+ 
++	avb: ethernet@e6800000 {
++		compatible = "renesas,gether-r8a7791";
++		reg = <0 0xe6800000 0 0x7bf>;
++		interrupts = <0 163 IRQ_TYPE_LEVEL_HIGH>;
++		clocks = <&mstp8_clks R8A7791_CLK_AVB>;
++		phy-mode = "gmii";
++		#address-cells = <1>;
++		#size-cells = <0>;
++		status = "disabled";
++	};
++
+ 	sata0: sata@ee300000 {
+ 		compatible = "renesas,sata-r8a7791";
+ 		reg = <0 0xee300000 0 0x2000>;
+diff --git a/arch/arm/mach-shmobile/board-koelsch-reference.c b/arch/arm/mach-shmobile/board-koelsch-reference.c
+index 0e96ffb..31cbde7 100644
+--- a/arch/arm/mach-shmobile/board-koelsch-reference.c
++++ b/arch/arm/mach-shmobile/board-koelsch-reference.c
+@@ -147,7 +147,9 @@ static const struct clk_name clk_names[] __initconst = {
+ 	{ "lvds0", "lvds.0", "rcar-du-r8a7791" },
+ 	{ "hsusb", NULL, "usb_phy_rcar_gen2" },
+ 	{ "vin0", NULL, "r8a7791-vin.0" },
++#if !IS_ENABLED(CONFIG_RAVB)
+ 	{ "vin1", NULL, "r8a7791-vin.1" },
++#endif
+ 	{ "vsps", NULL, NULL },
+ #if IS_ENABLED(CONFIG_VIDEO_RENESAS_VSP1) && \
+ !defined(CONFIG_DRM_RCAR_DU_CONNECT_VSP)
+@@ -174,6 +176,9 @@ static const struct clk_name clk_names[] __initconst = {
+  * This is a really crude hack to work around core platform clock issues
+  */
+ static const struct clk_name clk_enables[] __initconst = {
++#if IS_ENABLED(CONFIG_RAVB)
++	{ "avb", NULL, "e6800000.ethernet" },
++#endif
+ 	{ "ehci", NULL, "pci-rcar-gen2.1" },
+ 	{ "dmal", NULL, "sh-dma-engine.0" },
+ 	{ "dmah", NULL, "sh-dma-engine.1" },
+@@ -722,7 +727,9 @@ static struct soc_camera_link cam##idx##_link = {			\
+ }
+ 
+ KOELSCH_CAMERA(0, "adv7612", 0x4c, NULL, RCAR_VIN_BT709);
++#if !IS_ENABLED(CONFIG_RAVB)
+ KOELSCH_CAMERA(1, "adv7180", 0x20, NULL, RCAR_VIN_BT656);
++#endif
+ 
+ static void __init koelsch_add_camera0_device(void)
+ {
+@@ -731,12 +738,14 @@ static void __init koelsch_add_camera0_device(void)
+ 	koelsch_add_vin_device(0, &vin0_pdata);
+ }
+ 
++#if !IS_ENABLED(CONFIG_RAVB)
+ static void __init koelsch_add_camera1_device(void)
+ {
+ 	platform_device_register_data(&platform_bus, "soc-camera-pdrv", 1,
+ 				      &cam1_link, sizeof(cam1_link));
+ 	koelsch_add_vin_device(1, &vin1_pdata);
+ }
++#endif
+ 
+ /* VSP1 */
+ #if IS_ENABLED(CONFIG_VIDEO_RENESAS_VSP1) && \
+@@ -947,7 +956,9 @@ static void __init koelsch_add_standard_devices(void)
+ 	koelsch_add_du_device();
+ 	koelsch_add_usb_devices();
+ 	koelsch_add_camera0_device();
++#if !IS_ENABLED(CONFIG_RAVB)
+ 	koelsch_add_camera1_device();
++#endif
+ #if IS_ENABLED(CONFIG_VIDEO_RENESAS_VSP1) && \
+ !defined(CONFIG_DRM_RCAR_DU_CONNECT_VSP)
+ 	koelsch_add_vsp1_devices();
+diff --git a/arch/arm/mach-shmobile/board-lager-reference.c b/arch/arm/mach-shmobile/board-lager-reference.c
+index 9b975eb..0908357 100644
+--- a/arch/arm/mach-shmobile/board-lager-reference.c
++++ b/arch/arm/mach-shmobile/board-lager-reference.c
+@@ -190,7 +190,9 @@ static const struct clk_name clk_names[] __initconst = {
+  * This is a really crude hack to work around core platform clock issues
+  */
+ static const struct clk_name clk_enables[] __initconst = {
++#if IS_ENABLED(CONFIG_RAVB)
+ 	{ "avb", NULL, "e6800000.ethernet" },
++#endif
+ 	{ "ehci", NULL, "pci-rcar-gen2.1" },
+ 	{ "ehci", NULL, "pci-rcar-gen2.2" },
+ 	{ "dmal", NULL, "sh-dma-engine.0" },
+@@ -766,6 +768,7 @@ static struct soc_camera_link cam##idx##_link = {			\
+ 	.priv = pdata,							\
+ }
+ 
++#if !IS_ENABLED(CONFIG_RAVB)
+ LAGER_CAMERA(0, "adv7612", 0x4c, NULL, RCAR_VIN_BT709);
+ LAGER_CAMERA(1, "adv7180", 0x20, NULL, RCAR_VIN_BT656);
+ 
+@@ -782,6 +785,7 @@ static void __init lager_add_camera1_device(void)
+ 				      &cam1_link, sizeof(cam1_link));
+ 	lager_add_vin_device(1, &vin1_pdata);
+ }
++#endif
+ 
+ /* VSP1 */
+ #if IS_ENABLED(CONFIG_VIDEO_RENESAS_VSP1) && \
+@@ -972,8 +976,10 @@ static void __init lager_add_standard_devices(void)
+ #if !IS_ENABLED(CONFIG_USB_XHCI_HCD)
+ 	lager_add_usb2_device();
+ #endif
++#if !IS_ENABLED(CONFIG_RAVB)
+ 	lager_add_camera0_device();
+ 	lager_add_camera1_device();
++#endif
+ #if IS_ENABLED(CONFIG_VIDEO_RENESAS_VSP1) && \
+ !defined(CONFIG_DRM_RCAR_DU_CONNECT_VSP)
+ 	lager_add_vsp1_devices();
+diff --git a/drivers/net/ethernet/renesas/ravb_main.c b/drivers/net/ethernet/renesas/ravb_main.c
+index c296576..fa78108 100644
+--- a/drivers/net/ethernet/renesas/ravb_main.c
++++ b/drivers/net/ethernet/renesas/ravb_main.c
+@@ -2131,6 +2131,7 @@ static struct ravb_plat_data *ravb_parse_dt(struct device *dev,
+ 
+ static const struct of_device_id ravb_match_table[] = {
+ 	{ .compatible = "renesas,gether-r8a7790", .data = &r8a779x_data_giga },
++	{ .compatible = "renesas,gether-r8a7791", .data = &r8a779x_data_giga },
+ 	{ .compatible = "renesas,gether-r8a7794", .data = &r8a779x_data_giga },
+ 	{ }
+ };
+diff --git a/drivers/pinctrl/sh-pfc/pfc-r8a7791.c b/drivers/pinctrl/sh-pfc/pfc-r8a7791.c
+index 6f08c6f..7e8453f 100644
+--- a/drivers/pinctrl/sh-pfc/pfc-r8a7791.c
++++ b/drivers/pinctrl/sh-pfc/pfc-r8a7791.c
+@@ -2001,6 +2001,59 @@ static const unsigned int mlb3pin_pins[] = {
+ static const unsigned int mlb3pin_mux[] = {
+     MLB_CLK_MARK, MLB_SIG_MARK, MLB_DAT_MARK,
+ };
++/* - AVB -------------------------------------------------------------------- */
++static const unsigned int avb_link_pins[] = {
++	RCAR_GP_PIN(5, 14),
++};
++static const unsigned int avb_link_mux[] = {
++	AVB_LINK_MARK,
++};
++static const unsigned int avb_magic_pins[] = {
++	RCAR_GP_PIN(5, 11),
++};
++static const unsigned int avb_magic_mux[] = {
++	AVB_MAGIC_MARK,
++};
++static const unsigned int avb_phy_int_pins[] = {
++	RCAR_GP_PIN(5, 16),
++};
++static const unsigned int avb_phy_int_mux[] = {
++	AVB_PHY_INT_MARK,
++};
++static const unsigned int avb_mdio_pins[] = {
++	RCAR_GP_PIN(5, 12), RCAR_GP_PIN(5, 9),
++};
++static const unsigned int avb_mdio_mux[] = {
++	AVB_MDC_MARK, AVB_MDIO_MARK,
++};
++static const unsigned int avb_gmii_pins[] = {
++	RCAR_GP_PIN(5, 18), RCAR_GP_PIN(5, 19), RCAR_GP_PIN(5, 20),
++	RCAR_GP_PIN(5, 21), RCAR_GP_PIN(5, 22), RCAR_GP_PIN(5, 23),
++	RCAR_GP_PIN(5, 24), RCAR_GP_PIN(5, 25),
++
++	RCAR_GP_PIN(5, 0), RCAR_GP_PIN(5, 1), RCAR_GP_PIN(5, 2),
++	RCAR_GP_PIN(5, 3), RCAR_GP_PIN(5, 4), RCAR_GP_PIN(5, 5),
++	RCAR_GP_PIN(5, 6), RCAR_GP_PIN(5, 7),
++	RCAR_GP_PIN(5, 8), RCAR_GP_PIN(5, 13), RCAR_GP_PIN(5, 10),
++
++	RCAR_GP_PIN(5, 15), RCAR_GP_PIN(5, 30), RCAR_GP_PIN(5, 17),
++	RCAR_GP_PIN(5, 26), RCAR_GP_PIN(5, 27), RCAR_GP_PIN(5, 28),
++	RCAR_GP_PIN(5, 29),
++};
++static const unsigned int avb_gmii_mux[] = {
++	AVB_TXD0_MARK, AVB_TXD1_MARK, AVB_TXD2_MARK,
++	AVB_TXD3_MARK, AVB_TXD4_MARK, AVB_TXD5_MARK,
++	AVB_TXD6_MARK, AVB_TXD7_MARK,
++
++	AVB_RXD0_MARK, AVB_RXD1_MARK, AVB_RXD2_MARK,
++	AVB_RXD3_MARK, AVB_RXD4_MARK, AVB_RXD5_MARK,
++	AVB_RXD6_MARK, AVB_RXD7_MARK,
++	AVB_RX_ER_MARK, AVB_RX_CLK_MARK, AVB_RX_DV_MARK,
++
++	AVB_CRS_MARK, AVB_GTX_CLK_MARK, AVB_GTXREFCLK_MARK,
++	AVB_TX_EN_MARK, AVB_TX_ER_MARK, AVB_TX_CLK_MARK,
++	AVB_COL_MARK,
++};
+ /* - HSCIF0 ----------------------------------------------------------------- */
+ static const unsigned int hscif0_data_pins[] = {
+ 	/* RX, TX */
+@@ -4227,6 +4280,11 @@ static const struct sh_pfc_pin_group pinmux_groups[] = {
+ 	SH_PFC_PIN_GROUP(eth_magic),
+ 	SH_PFC_PIN_GROUP(eth_mdio),
+ 	SH_PFC_PIN_GROUP(eth_rmii),
++	SH_PFC_PIN_GROUP(avb_link),
++	SH_PFC_PIN_GROUP(avb_magic),
++	SH_PFC_PIN_GROUP(avb_phy_int),
++	SH_PFC_PIN_GROUP(avb_mdio),
++	SH_PFC_PIN_GROUP(avb_gmii),
+ 	SH_PFC_PIN_GROUP(mlb3pin),
+ 	SH_PFC_PIN_GROUP(hscif0_data),
+ 	SH_PFC_PIN_GROUP(hscif0_clk),
+@@ -4580,6 +4638,14 @@ static const char * const mlb3pin_groups[] = {
+ 	"mlb3pin",
+ };
+ 
++static const char * const avb_groups[] = {
++	"avb_link",
++	"avb_magic",
++	"avb_phy_int",
++	"avb_mdio",
++	"avb_gmii",
++};
++
+ static const char * const hscif0_groups[] = {
+ 	"hscif0_data",
+ 	"hscif0_clk",
+@@ -4984,6 +5050,7 @@ static const struct sh_pfc_function pinmux_functions[] = {
+ 	SH_PFC_FUNCTION(du0),
+ 	SH_PFC_FUNCTION(du1),
+ 	SH_PFC_FUNCTION(eth),
++	SH_PFC_FUNCTION(avb),
+ 	SH_PFC_FUNCTION(mlb3pin),
+ 	SH_PFC_FUNCTION(hscif0),
+ 	SH_PFC_FUNCTION(hscif1),
+diff --git a/include/dt-bindings/clock/r8a7791-clock.h b/include/dt-bindings/clock/r8a7791-clock.h
+index cbde1a0..efa9ecd 100644
+--- a/include/dt-bindings/clock/r8a7791-clock.h
++++ b/include/dt-bindings/clock/r8a7791-clock.h
+@@ -95,6 +95,7 @@
+ #define R8A7791_CLK_VIN2		9
+ #define R8A7791_CLK_VIN1		10
+ #define R8A7791_CLK_VIN0		11
++#define R8A7791_CLK_AVB			12
+ #define R8A7791_CLK_ETHER		13
+ #define R8A7791_CLK_SATA1		14
+ #define R8A7791_CLK_SATA0		15
+-- 
+1.7.9.5
+

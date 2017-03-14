@@ -1,0 +1,27 @@
+From 881838951504feac2f42e771ed2195b305cf22a1 Mon Sep 17 00:00:00 2001
+From: Andrey Gusakov <andrey.gusakov@cogentembedded.com>
+Date: Wed, 13 Apr 2016 14:36:50 +0300
+Subject: [PATCH 19/21] ASoC: PCM3168A: enable on power on
+
+
+Signed-off-by: Andrey Gusakov <andrey.gusakov@cogentembedded.com>
+---
+ sound/soc/codecs/pcm3168a.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/sound/soc/codecs/pcm3168a.c b/sound/soc/codecs/pcm3168a.c
+index 06b5d53..719eca1 100644
+--- a/sound/soc/codecs/pcm3168a.c
++++ b/sound/soc/codecs/pcm3168a.c
+@@ -600,7 +600,7 @@ static struct snd_soc_dai_driver pcm3168a_dais[] = {
+ 
+ static const struct reg_default pcm3168a_reg_default[] = {
+ 	{ PCM3168A_RST_SMODE, PCM3168A_MRST_MASK | PCM3168A_SRST_MASK },
+-	{ PCM3168A_DAC_PWR_MST_FMT, 0x00 },
++	{ PCM3168A_DAC_PWR_MST_FMT, 0x80 },
+ 	{ PCM3168A_DAC_OP_FLT, 0x00 },
+ 	{ PCM3168A_DAC_INV, 0x00 },
+ 	{ PCM3168A_DAC_MUTE, 0x00 },
+-- 
+1.7.10.4
+

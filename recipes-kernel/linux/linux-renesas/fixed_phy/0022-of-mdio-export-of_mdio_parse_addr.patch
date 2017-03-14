@@ -1,0 +1,67 @@
+From 33d6737761ea425d43f3b6e4561573a4020982f2 Mon Sep 17 00:00:00 2001
+From: Florian Fainelli <f.fainelli@gmail.com>
+Date: Tue, 10 Mar 2015 16:57:11 -0700
+Subject: [PATCH] of: mdio: export of_mdio_parse_addr
+
+Export of_mdio_parse_addr() which allows parsing a given Ethernet PHY
+node MDIO address, verify it is within the allowed range, and return
+its value. This is going to be useful for the DSA code which needs to
+deal with multiple layers of MDIO buses.
+
+Signed-off-by: Florian Fainelli <f.fainelli@gmail.com>
+Acked-by: Rob Herring <robh@kernel.org>
+Signed-off-by: David S. Miller <davem@davemloft.net>
+---
+ drivers/of/of_mdio.c    | 3 ++-
+ include/linux/of_mdio.h | 7 +++++++
+ 2 files changed, 9 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/of/of_mdio.c b/drivers/of/of_mdio.c
+index 1bd4305..0c06448 100644
+--- a/drivers/of/of_mdio.c
++++ b/drivers/of/of_mdio.c
+@@ -88,7 +88,7 @@ static int of_mdiobus_register_phy(struct mii_bus *mdio, struct device_node *chi
+ 	return 0;
+ }
+ 
+-static int of_mdio_parse_addr(struct device *dev, const struct device_node *np)
++int of_mdio_parse_addr(struct device *dev, const struct device_node *np)
+ {
+ 	u32 addr;
+ 	int ret;
+@@ -108,6 +108,7 @@ static int of_mdio_parse_addr(struct device *dev, const struct device_node *np)
+ 
+ 	return addr;
+ }
++EXPORT_SYMBOL(of_mdio_parse_addr);
+ 
+ /**
+  * of_mdiobus_register - Register mii_bus and create PHYs from the device tree
+diff --git a/include/linux/of_mdio.h b/include/linux/of_mdio.h
+index d449018..8f2237e 100644
+--- a/include/linux/of_mdio.h
++++ b/include/linux/of_mdio.h
+@@ -24,6 +24,7 @@ struct phy_device *of_phy_attach(struct net_device *dev,
+ 				 phy_interface_t iface);
+ 
+ extern struct mii_bus *of_mdio_find_bus(struct device_node *mdio_np);
++extern int of_mdio_parse_addr(struct device *dev, const struct device_node *np);
+ 
+ #else /* CONFIG_OF */
+ static inline int of_mdiobus_register(struct mii_bus *mdio, struct device_node *np)
+@@ -60,6 +61,12 @@ static inline struct mii_bus *of_mdio_find_bus(struct device_node *mdio_np)
+ {
+ 	return NULL;
+ }
++
++static inline int of_mdio_parse_addr(struct device *dev,
++				     const struct device_node *np)
++{
++	return -ENOSYS;
++}
+ #endif /* CONFIG_OF */
+ 
+ #if defined(CONFIG_OF) && defined(CONFIG_FIXED_PHY)
+-- 
+1.9.1
+

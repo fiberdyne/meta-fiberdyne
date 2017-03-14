@@ -1,0 +1,47 @@
+From b68fddb08001d38033716ce5b12de8edef72c3ac Mon Sep 17 00:00:00 2001
+From: Vladimir Barinov <vladimir.barinov@cogentembedded.com>
+Date: Fri, 18 Mar 2016 16:42:28 +0100
+Subject: [PATCH] sh-eth: Add fixed-link support
+
+This adds support of the fixed PHY
+
+Signed-off-by: Vladimir Barinov <vladimir.barinov@cogentembedded.com>
+---
+ drivers/net/ethernet/renesas/sh_eth.c    | 11 ++++++++++-
+ 2 files changed, 11 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/ethernet/renesas/sh_eth.c b/drivers/net/ethernet/renesas/sh_eth.c
+index 2509664..64c37fe 100644
+--- a/drivers/net/ethernet/renesas/sh_eth.c
++++ b/drivers/net/ethernet/renesas/sh_eth.c
+@@ -1784,6 +1784,7 @@ static int sh_eth_phy_init(struct net_device *ndev)
+ 	struct device_node *np = ndev->dev.parent->of_node;
+ 	struct sh_eth_private *mdp = netdev_priv(ndev);
+ 	struct phy_device *phydev = NULL;
++	int err;
+ 
+ 	mdp->link = 0;
+ 	mdp->speed = 0;
+@@ -1794,10 +1795,18 @@ static int sh_eth_phy_init(struct net_device *ndev)
+ 		struct device_node *pn;
+ 
+ 		pn = of_parse_phandle(np, "phy-handle", 0);
++		if (!pn) {
++			/* Try connect to FIXED PHY */
++			if (of_phy_is_fixed_link(np)) {
++				err = of_phy_register_fixed_link(np);
++				if (err)
++					return err;
++				}
++			pn = of_node_get(np);
++		}
+ 		phydev = of_phy_connect(ndev, pn,
+ 					sh_eth_adjust_link, 0,
+ 					mdp->phy_interface);
+-
+ 		if (!phydev)
+ 			phydev = ERR_PTR(-ENOENT);
+ 	} else {
+-- 
+1.9.1
+

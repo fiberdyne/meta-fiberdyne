@@ -1,0 +1,60 @@
+From f54cc5cd6059fd65d88040805a5da72e894ad9de Mon Sep 17 00:00:00 2001
+From: Andrey Gusakov <andrey.gusakov@cogentembedded.com>
+Date: Thu, 28 Jan 2016 19:46:49 +0300
+Subject: [PATCH 02/10] Porter: adapt max9272-ov10635 driver for porter exp
+ board
+
+
+Signed-off-by: Andrey Gusakov <andrey.gusakov@cogentembedded.com>
+---
+ drivers/media/i2c/soc_camera/max9272_ov10635.h       |    4 ++--
+ drivers/media/i2c/soc_camera/max9272_ov10635_setup.c |   12 ++++++------
+ 2 files changed, 8 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/media/i2c/soc_camera/max9272_ov10635.h b/drivers/media/i2c/soc_camera/max9272_ov10635.h
+index de1d351..80e9af4 100644
+--- a/drivers/media/i2c/soc_camera/max9272_ov10635.h
++++ b/drivers/media/i2c/soc_camera/max9272_ov10635.h
+@@ -17,8 +17,8 @@
+ #define dev_dbg dev_info
+ #endif
+
+-#define MAX9275_PRESENT			/* MAX9275 presents on I2C bus */
+-#define MAXIM_NUM		4	/* number of cameras */
++//#define MAX9275_PRESENT			/* MAX9275 presents on I2C bus */
++#define MAXIM_NUM		1	/* number of cameras */
+ #define MAXIM_NUM_RETRIES	1	/* number of read/write retries */
+
+ #define MAXIM_I2C_I2C_SPEED_400KHZ	(0x5 << 2) /* 339 kbps */
+diff --git a/drivers/media/i2c/soc_camera/max9272_ov10635_setup.c b/drivers/media/i2c/soc_camera/max9272_ov10635_setup.c
+index 0d4db0f..d01eb5c 100644
+--- a/drivers/media/i2c/soc_camera/max9272_ov10635_setup.c
++++ b/drivers/media/i2c/soc_camera/max9272_ov10635_setup.c
+@@ -39,6 +39,12 @@ static int maxim_probe(struct i2c_client *client,
+ 		}
+ 	}
+
++	tmp_addr = client->addr;
++
++	/* power up camera */
++	client->addr = 0x48;						/* MAX9272-CAM0 I2C */
++	maxim_reg8_write(client, 0x0e, 0x00);				/* GP0 low - enable power for camera */
++
+ 	/*
+ 	 * Powered MCU IMI cameras need delay between power-on and R-Car access to avoid
+ 	 * i2c bus conflicts since linux kernel does not support i2c multi-mastering,
+@@ -47,12 +53,6 @@ static int maxim_probe(struct i2c_client *client,
+ 	 */
+ 	mdelay(MAXIM_IMI_MCU_DELAY);
+
+-	tmp_addr = client->addr;
+-
+-	/* power down cascaded MAX9272 chips */
+-	client->addr = 0x48;						/* MAX9272-CAM0 I2C */
+-	maxim_reg8_write(client, 0x0e, 0x02);				/* GP0 high */
+-
+ #ifdef MAX9275_PRESENT
+ 	/*
+ 	 * SETUP MAX9275 I2C
+--
+1.7.10.4

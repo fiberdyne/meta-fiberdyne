@@ -1,0 +1,88 @@
+From 106ac216eb15205cdcbbd681662b3d018670ca54 Mon Sep 17 00:00:00 2001
+From: Andrey Gusakov <andrey.gusakov@cogentembedded.com>
+Date: Mon, 30 May 2016 16:16:58 +0300
+Subject: [PATCH] Porter: add LVDS camera
+
+
+Signed-off-by: Andrey Gusakov <andrey.gusakov@cogentembedded.com>
+---
+ arch/arm/mach-shmobile/board-porter-reference.c |   21 +++++++++++++++++----
+ 1 file changed, 17 insertions(+), 4 deletions(-)
+
+diff --git a/arch/arm/mach-shmobile/board-porter-reference.c b/arch/arm/mach-shmobile/board-porter-reference.c
+index a286a80..a3af264 100644
+--- a/arch/arm/mach-shmobile/board-porter-reference.c
++++ b/arch/arm/mach-shmobile/board-porter-reference.c
+@@ -148,6 +148,7 @@ static const struct clk_name clk_names[] __initconst = {
+ 	{ "lvds0", "lvds.0", "rcar-du-r8a7791" },
+ 	{ "hsusb", NULL, "usb_phy_rcar_gen2" },
+ 	{ "vin0", NULL, "r8a7791-vin.0" },
++	{ "vin2", NULL, "r8a7791-vin.2" },
+ 	{ "vsps", NULL, NULL },
+ #if IS_ENABLED(CONFIG_VIDEO_RENESAS_VSP1) && \
+ !defined(CONFIG_DRM_RCAR_DU_CONNECT_VSP)
+@@ -673,6 +674,9 @@ static const struct resource vin_resources[] __initconst = {
+ 	/* VIN1 */
+ 	DEFINE_RES_MEM(0xe6ef1000, 0x1000),
+ 	DEFINE_RES_IRQ(gic_spi(189)),
++	/* VIN2 */
++	DEFINE_RES_MEM(0xe6ef2000, 0x1000),
++	DEFINE_RES_IRQ(gic_spi(190)),
+ };
+
+ static void __init porter_add_vin_device(unsigned idx,
+@@ -689,12 +693,12 @@ static void __init porter_add_vin_device(unsigned idx,
+ 		.size_data	= sizeof(*pdata),
+ 	};
+
+-	BUG_ON(idx > 1);
++	BUG_ON(idx > 2);
+
+ 	platform_device_register_full(&vin_info);
+ }
+
+-#define PORTER_CAMERA(idx, name, addr, pdata, flag)			\
++#define PORTER_CAMERA(idx, name, bus, addr, pdata, flag)		\
+ static struct i2c_board_info i2c_cam##idx##_device = {			\
+ 	I2C_BOARD_INFO(name, addr),					\
+ };									\
+@@ -706,12 +710,13 @@ static struct rcar_vin_platform_data vin##idx##_pdata = {		\
+ static struct soc_camera_link cam##idx##_link = {			\
+ 	.bus_id = idx,							\
+ 	.board_info = &i2c_cam##idx##_device,				\
+-	.i2c_adapter_id = 2,						\
++	.i2c_adapter_id = bus,						\
+ 	.module_name = name,						\
+ 	.priv = pdata,							\
+ }
+
+-PORTER_CAMERA(0, "adv7180", 0x20, NULL, RCAR_VIN_BT656);
++PORTER_CAMERA(0, "adv7180", 2, 0x20, NULL, RCAR_VIN_BT656);
++PORTER_CAMERA(2, "max9272-ov10635", 0, 0x30 + 1, NULL, RCAR_VIN_BT656);
+
+ static void __init porter_add_camera0_device(void)
+ {
+@@ -720,6 +725,13 @@ static void __init porter_add_camera0_device(void)
+ 	porter_add_vin_device(0, &vin0_pdata);
+ }
+
++static void __init porter_add_camera2_device(void)
++{
++	platform_device_register_data(&platform_bus, "soc-camera-pdrv", 2,
++				      &cam2_link, sizeof(cam2_link));
++	porter_add_vin_device(2, &vin2_pdata);
++}
++
+ /* VSP1 */
+ #if IS_ENABLED(CONFIG_VIDEO_RENESAS_VSP1) && \
+ !defined(CONFIG_DRM_RCAR_DU_CONNECT_VSP)
+@@ -911,6 +923,7 @@ static void __init porter_add_standard_devices(void)
+ 	porter_add_du_device();
+ 	porter_add_usb_devices();
+ 	porter_add_camera0_device();
++	porter_add_camera2_device();
+ #if IS_ENABLED(CONFIG_VIDEO_RENESAS_VSP1) && \
+ !defined(CONFIG_DRM_RCAR_DU_CONNECT_VSP)
+ 	porter_add_vsp1_devices();
+--
+1.7.10.4

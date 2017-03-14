@@ -1,0 +1,354 @@
+From cd5612aeb65de5468f793558d6536d1b90b3dc76 Mon Sep 17 00:00:00 2001
+From: Grigory Kletsko <grigory.kletsko@cogentembedded.com>
+Date: Wed, 15 Jun 2016 21:13:26 +0300
+Subject: [PATCH 1/5] ASoC: R-Car: initial TDM support
+
+---
+ include/sound/rcar_snd.h |   4 ++
+ sound/soc/sh/rcar/core.c |  14 ++++-
+ sound/soc/sh/rcar/src.c  |  12 +++-
+ sound/soc/sh/rcar/ssi.c  | 148 ++++++++++++++++++++++++++++++++++++++++++++---
+ 4 files changed, 164 insertions(+), 14 deletions(-)
+
+diff --git a/include/sound/rcar_snd.h b/include/sound/rcar_snd.h
+index e2f1000..37229c1 100644
+--- a/include/sound/rcar_snd.h
++++ b/include/sound/rcar_snd.h
+@@ -35,6 +35,10 @@
+  */
+ #define RSND_SSI_CLK_PIN_SHARE		(1 << 31)
+ #define RSND_SSI_NO_BUSIF		(1 << 30) /* SSI+DMA without BUSIF */
++#define RSND_SSI_TDM_4			(1 << 29) /* use 4ch TDM on this SSI */
++#define RSND_SSI_TDM_6			(1 << 28) /* use 6ch TDM on this SSI */
++#define RSND_SSI_TDM_8			(1 << 27) /* use 8ch TDM on this SSI */
++#define RSND_SSI_TDM_MASK		(0x7 << 27)
+
+ #define RSND_SSI(_dma_id, _pio_irq, _flags)		\
+ { .dma_id = _dma_id, .pio_irq = _pio_irq, .flags = _flags }
+diff --git a/sound/soc/sh/rcar/core.c b/sound/soc/sh/rcar/core.c
+index ede9b5d..0b5c90e 100644
+--- a/sound/soc/sh/rcar/core.c
++++ b/sound/soc/sh/rcar/core.c
+@@ -426,6 +426,16 @@ u32 rsnd_get_adinr(struct rsnd_mod *mod)
+ 	case 16:
+ 		adinr |= (8 << 16);
+ 		break;
++	case 18:
++		adinr |= (6 << 16);
++		break;
++	case 20:
++		adinr |= (4 << 16);
++		break;
++	case 22:
++		adinr |= (2 << 16);
++		break;
++	case 24:
+ 	case 32:
+ 		adinr |= (0 << 16);
+ 		break;
+@@ -1074,7 +1084,7 @@ static int rsnd_dai_probe(struct platform_device *pdev,
+ 			drv[i].playback.rates		= RSND_RATES;
+ 			drv[i].playback.formats		= RSND_FMTS;
+ 			drv[i].playback.channels_min	= 2;
+-			drv[i].playback.channels_max	= 2;
++			drv[i].playback.channels_max	= 8;
+
+ 			rdai[i].playback.info = &info->dai_info[i].playback;
+ 			rsnd_path_init(priv, &rdai[i], &rdai[i].playback);
+@@ -1083,7 +1093,7 @@ static int rsnd_dai_probe(struct platform_device *pdev,
+ 			drv[i].capture.rates		= RSND_RATES;
+ 			drv[i].capture.formats		= RSND_FMTS;
+ 			drv[i].capture.channels_min	= 2;
+-			drv[i].capture.channels_max	= 2;
++			drv[i].capture.channels_max	= 8;
+
+ 			rdai[i].capture.info = &info->dai_info[i].capture;
+ 			rsnd_path_init(priv, &rdai[i], &rdai[i].capture);
+diff --git a/sound/soc/sh/rcar/src.c b/sound/soc/sh/rcar/src.c
+index 426714e..bbd7fe5 100644
+--- a/sound/soc/sh/rcar/src.c
++++ b/sound/soc/sh/rcar/src.c
+@@ -158,6 +158,8 @@ int rsnd_src_ssiu_start(struct rsnd_mod *ssi_mod,
+ 	 */
+ 	if (rsnd_ssi_is_pin_sharing(ssi_mod)) {
+ 		int shift = -1;
++		int sync_34 = 0;
++		int mask = 0;
+ 		switch (ssi_id) {
+ 		case 1:
+ 			shift = 0;
+@@ -165,16 +167,20 @@ int rsnd_src_ssiu_start(struct rsnd_mod *ssi_mod,
+ 		case 2:
+ 			shift = 2;
+ 			break;
++		case 3:
+ 		case 4:
+ 			shift = 16;
++			sync_34 = 1;
++			mask = (1 << 20);
+ 			break;
+ 		}
+
+ 		if (shift >= 0)
+ 			rsnd_mod_bset(ssi_mod, SSI_MODE1,
+-				      0x3 << shift,
+-				      rsnd_dai_is_clk_master(rdai) ?
+-				      0x2 << shift : 0x1 << shift);
++				      (0x3 << shift) | mask,
++				      (rsnd_dai_is_clk_master(rdai) ?
++				      (0x2 << shift) : (0x1 << shift)) |
++				      (sync_34 << 20));
+ 	}
+
+ 	/*
+diff --git a/sound/soc/sh/rcar/ssi.c b/sound/soc/sh/rcar/ssi.c
+index 49acffe..a55ac91 100644
+--- a/sound/soc/sh/rcar/ssi.c
++++ b/sound/soc/sh/rcar/ssi.c
+@@ -26,6 +26,10 @@
+ #define	IIEN		(1 << 25)	/* Idle Mode Interrupt Enable */
+ #define	DIEN		(1 << 24)	/* Data Interrupt Enable */
+
++#define	CHNL_TDM_4	(1 << 22)	/* A TDM frame consists of four system words */
++#define	CHNL_TDM_6	(2 << 22)	/* A TDM frame consists of six system words */
++#define	CHNL_TDM_8	(3 << 22)	/* A TDM frame consists of eight system words */
++
+ #define	DWL_8		(0 << 19)	/* Data Word Length */
+ #define	DWL_16		(1 << 19)	/* Data Word Length */
+ #define	DWL_18		(2 << 19)	/* Data Word Length */
+@@ -58,6 +62,8 @@
+  * SSIWSR
+  */
+ #define CONT		(1 << 8)	/* WS Continue Function */
++#define MONO		(1 << 1)	/* Monaural format */
++#define WS_MODE_TDM	(1 << 0)	/* TDM format, monaural format */
+
+ #define SSI_NAME "ssi"
+
+@@ -92,6 +98,24 @@ struct rsnd_ssi {
+ #define rsnd_ssi_mode_flags(p) ((p)->info->flags)
+ #define rsnd_ssi_dai_id(ssi) ((ssi)->info->dai_id)
+
++int rsnd_ssi_is_tdm(struct rsnd_ssi *ssi)
++{
++	return !!(rsnd_ssi_mode_flags(ssi) & RSND_SSI_TDM_MASK);
++}
++
++int rsnd_ssi_channels(struct rsnd_ssi *ssi)
++{
++	if (rsnd_ssi_mode_flags(ssi) & RSND_SSI_TDM_4)
++		return 4;
++	if (rsnd_ssi_mode_flags(ssi) & RSND_SSI_TDM_6)
++		return 6;
++	if (rsnd_ssi_mode_flags(ssi) & RSND_SSI_TDM_8)
++		return 8;
++
++	/* no TDM */
++	return 2;
++}
++
+ static int rsnd_ssi_use_busif(struct rsnd_mod *mod)
+ {
+ 	struct rsnd_ssi *ssi = rsnd_mod_to_ssi(mod);
+@@ -152,22 +176,32 @@ static int rsnd_ssi_master_clk_start(struct rsnd_ssi *ssi,
+ 		for (j = 0; j < ARRAY_SIZE(ssi_clk_mul_table); j++) {
+
+ 			/*
++			 * divider = 1 not allowed in TDM
++			 */
++			if ((ssi_clk_mul_table[j] == 1) &&
++				(rsnd_ssi_is_tdm(ssi)))
++				continue;
++
++			/*
+ 			 * this driver is assuming that
+-			 * system word is 64fs (= 2 x 32bit)
++			 * system word n_channels x 32bit
+ 			 * see rsnd_ssi_init()
+ 			 */
+ 			main_rate = rate / adg_clk_div_table[i]
+-				* 32 * 2 * ssi_clk_mul_table[j];
++				* 32 * rsnd_ssi_channels(ssi) \
++				* ssi_clk_mul_table[j];
+
+ 			ret = rsnd_adg_ssi_clk_try_start(&ssi->mod, main_rate);
+ 			if (0 == ret) {
+-				ssi->rate	= rate;
+-				ssi->cr_clk	= FORCE | SWL_32 |
+-						  SCKD | SWSD | CKDV(j);
+-
+ 				dev_dbg(dev, "ssi%d outputs %u Hz\n",
+ 					rsnd_mod_id(&ssi->mod), rate);
++				dev_dbg(dev, " div %d, mul %d\n",
++					adg_clk_div_table[i], ssi_clk_mul_table[j]);
+
++
++				ssi->rate	= rate;
++				ssi->cr_clk	= FORCE | SWL_32 |
++						  SCKD | SWSD | CKDV(j);
+ 				return 0;
+ 			}
+ 		}
+@@ -203,10 +237,13 @@ static void rsnd_ssi_hw_start(struct rsnd_ssi *ssi,
+ 					rsnd_mod_write(&ssi->mod, SSIWSR, CONT);
+ 			}
+
+-			if (rsnd_ssi_clk_from_parent(ssi))
++			if (rsnd_ssi_clk_from_parent(ssi)) {
++				/* in TDM mode CKDV=0 is invalid */
++				ssi->cr_clk = CKDV(1);
+ 				rsnd_ssi_hw_start(ssi->parent, rdai, io);
+-			else
++			} else {
+ 				rsnd_ssi_master_clk_start(ssi, io);
++			}
+ 		}
+ 	}
+
+@@ -318,14 +355,44 @@ static int rsnd_ssi_init(struct rsnd_mod *mod,
+ 	 * see also rsnd_ssi_master_clk_enable()
+ 	 */
+ 	cr |= SWL_32;
++	if (rsnd_ssi_is_tdm(ssi)) {
++		switch (rsnd_ssi_channels(ssi)) {
++		case 4:
++			cr |= CHNL_TDM_4;
++			break;
++		case 6:
++			cr |= CHNL_TDM_6;
++			break;
++		case 8:
++			cr |= CHNL_TDM_8;
++			break;
++		default:
++			return -EIO;
++		}
++	}
+
+ 	/*
+ 	 * init clock settings for SSICR
+ 	 */
+ 	switch (runtime->sample_bits) {
++	case 8:
++		cr |= DWL_8;
++		break;
+ 	case 16:
+ 		cr |= DWL_16;
+ 		break;
++	case 18:
++		cr |= DWL_18;
++		break;
++	case 20:
++		cr |= DWL_20;
++		break;
++	case 22:
++		cr |= DWL_22;
++		break;
++	case 24:
++		cr |= DWL_24;
++		break;
+ 	case 32:
+ 		cr |= DWL_24;
+ 		break;
+@@ -394,17 +461,47 @@ static int rsnd_ssi_init_irq(struct rsnd_mod *mod,
+ 	 * see also rsnd_ssi_master_clk_enable()
+ 	 */
+ 	cr |= SWL_32;
++	if (rsnd_ssi_is_tdm(ssi)) {
++		switch (rsnd_ssi_channels(ssi)) {
++		case 4:
++			cr |= CHNL_TDM_4;
++			break;
++		case 6:
++			cr |= CHNL_TDM_6;
++			break;
++		case 8:
++			cr |= CHNL_TDM_8;
++			break;
++		default:
++			return -EIO;
++		}
++	}
+
+ 	/*
+ 	 * init clock settings for SSICR
+ 	 */
+ 	switch (runtime->sample_bits) {
++	case 8:
++		cr |= DWL_8;
++		break;
+ 	case 16:
+ 		cr |= DWL_16;
+ 		break;
+-	case 32:
++	case 18:
++		cr |= DWL_18;
++		break;
++	case 20:
++		cr |= DWL_20;
++		break;
++	case 22:
++		cr |= DWL_22;
++		break;
++	case 24:
+ 		cr |= DWL_24;
+ 		break;
++	case 32:
++		cr |= DWL_32;
++		break;
+ 	default:
+ 		return -EIO;
+ 	}
+@@ -693,9 +790,33 @@ static int rsnd_ssi_dma_start(struct rsnd_mod *mod,
+ {
+ 	struct rsnd_ssi *ssi = rsnd_mod_to_ssi(mod);
+ 	struct rsnd_dma *dma = rsnd_mod_to_dma(&ssi->mod);
++	struct rsnd_dai_stream *io = rsnd_mod_to_io(mod);
++	u32 wsr = 0;
++
++	/* enable DMA transfer */
++	ssi->cr_etc = DMEN;
++
++	/* enable Overflow and Underflow IRQ */
++	ssi->cr_etc |= UIEN | OIEN;
+
+ 	rsnd_dma_start(dma);
+
++	rsnd_ssi_hw_start(ssi, ssi->rdai, io);
++
++	rsnd_src_enable_dma_ssi_irq(mod, rdai, rsnd_ssi_use_busif(mod));
++
++	/* enable WS continue */
++	if (rsnd_dai_is_clk_master(rdai))
++		wsr |= CONT;
++
++	/* Enable TDM */
++	if (rsnd_ssi_is_tdm(ssi))
++		wsr |= WS_MODE_TDM;
++
++	rsnd_mod_write(&ssi->mod, SSIWSR, wsr);
++
++	rsnd_src_ssiu_start(mod, rdai, rsnd_ssi_use_busif(mod));
++
+ 	return 0;
+ }
+
+@@ -916,6 +1036,16 @@ static void rsnd_of_parse_ssi(struct platform_device *pdev,
+
+ 		if (of_get_property(np, "no-busif", NULL))
+ 			ssi_info->flags |= RSND_SSI_NO_BUSIF;
++
++		/*
++		 * TDM
++		 */
++		if (of_get_property(np, "tdm-4ch", NULL))
++			ssi_info->flags |= RSND_SSI_TDM_4;
++		if (of_get_property(np, "tdm-6ch", NULL))
++			ssi_info->flags |= RSND_SSI_TDM_6;
++		if (of_get_property(np, "tdm-8ch", NULL))
++			ssi_info->flags |= RSND_SSI_TDM_8;
+ 	}
+
+ rsnd_of_parse_ssi_end:
+--
+2.5.0
