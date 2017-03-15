@@ -33,7 +33,7 @@ Setup
    Add the following lines to the file:
   
    [launcher]
-   icon=/usr/share/icons/hicolor/32x32/apps/rygel.png
+   icon=/usr/share/weston/icon_window.png
    path=/usr/bin/_fd-dsp-ui
    
    And change the shell variable to:
