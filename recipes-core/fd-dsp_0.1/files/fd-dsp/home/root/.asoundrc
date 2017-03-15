@@ -13,11 +13,11 @@ pcm.dmixMaster  {
         ipc_key_add_uid true    # let multiple users share
         ipc_perm 0666           # IPC permissions for multi user sharing (octal, default 0600)
  	slave {
-		pcm "hw:1,0"
+		pcm "hw:3,0"
                 channels 4
 		period_time 0
 		period_size 1024
-		buffer_size 16384
+		buffer_size 32768
 		rate 48000
 	}
 
