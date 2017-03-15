@@ -32,7 +32,7 @@ do_install () {
     install ${WORKDIR}/fd-dsp/${bindir}/_fd-dsp-ui ${D}/${bindir}/
    # Install test executables and scripts
     install ${WORKDIR}/fd-dsp/${bindir}/fd-dsp-test.sh ${D}/${bindir}/
-    install ${WORKDIR}/fd-dsp/${bindir}/ak41_start ${D}/${bindir}/
+    install ${WORKDIR}/fd-dsp/${bindir}/pcm3168_start ${D}/${bindir}/
    # Install .wav files
     install -d ${D}/usr/share
     install ${WORKDIR}/fd-dsp/usr/share/fd-dsp-test.wav ${D}/usr/share/
@@ -72,7 +72,7 @@ FILES_${PN} = " \
     ${bindir}/_fd-dsp-ui \
     ${bindir}/fd-dsp-test \
     ${bindir}/fd-dsp-test.sh \
-    ${bindir}/ak41_start \
+    ${bindir}/pcm3168_start \
     /usr/share/fd-dsp-test.wav \
     /usr/share/fd-dsp-sweep.wav \
     /home/root/fd-dsp-ui.wgt \

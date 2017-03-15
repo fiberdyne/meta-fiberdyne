@@ -3,16 +3,16 @@ Fiberdyne Yocto Layer Setup
 -------------------------------------------------------------------------------------------
 
 This tutorial will guide you in setting up the meta-fiberdyne Yocto layer for the Poky 
-build environment under Automotive Grade Linux on the Renesas M2 Porter.
+build environment under Automotive Grade Linux on the Renesas M2 Porter with Cogent expansion board pext01.
 For all purposes, the Yocto root directory will be referred to as $WORK.
 
 -------------
 Setup
 -------------
-1. Clone the "agl" branch of the meta-fiberdyne repository into $WORK/meta:
+1. Clone the "agl-pext01" branch of the meta-fiberdyne repository into $WORK/meta:
 
    cd $WORK/meta
-   git clone https://github.com/fiberdyne/yocto-meta-fiberdyne.git --branch agl
+   git clone https://github.com/fiberdyne/yocto-meta-fiberdyne.git --branch agl-pext01
 
 2. Locate your Yocto bblayers configuration file at $WORK/build/conf/bblayers.conf 
    and add the following lines:
@@ -75,9 +75,3 @@ The underlying ALSA driver supports 48000 KHz sample rate only.
 The test application fd-dsp-test uses the standard ALSA tool, aplay, to play stereo
 audio using sinkStereo. 
 The other sinks can be tested via the same commands used in the test script. 
-
-It must also be noted that, due to the AK4643 codec driver being implemented as a ALSA
-device driver, ALSA must be used to initialize the codec for 16-bit audio playback
-through the line out jack on the Porter board. 
-The AK4643 ALSA device is available as "hw:1,0". Discussion about the steps involved
-in achieving this is beyond the scope of this document. 
