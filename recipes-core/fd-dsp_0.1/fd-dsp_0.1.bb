@@ -5,7 +5,14 @@ LICENSE = "CLOSED"
 PR = "r0"
 PV = "0.1"
 
-SRC_URI = "file://fd-dsp.tar.gz"
+SRC_URI = "file://fd-dsp-bin.tar.gz \
+           file://system-local.conf \
+           file://fd-dsp.sh \
+           file://fd-dsp-ui.sh \
+           file://fd-dsp-test.sh \
+           file://.asoundrc \
+           file://fd-dsp.service \
+           "
 
 # Skip configure and compilation
 do_configure[noexec] = "1"
@@ -16,35 +23,35 @@ do_compile[noexec] = "1"
 do_install () {
    # Install firmware
     install -d ${D}${base_libdir}/firmware/
-    install ${WORKDIR}/fd-dsp/lib/firmware/xf-m2.fw ${D}${base_libdir}/firmware/
+    install ${WORKDIR}/fd-dsp-bin/xf-m2.fw ${D}${base_libdir}/firmware/
    # Install kernel modules
     install -d ${D}${base_libdir}/modules/
-    install ${WORKDIR}/fd-dsp/lib/modules/fd-xtensa-hifi.ko ${D}${base_libdir}/modules/
-    install ${WORKDIR}/fd-dsp/lib/modules/fd-alsa-drv.ko ${D}${base_libdir}/modules/
+    install ${WORKDIR}/fd-dsp-bin/fd-xtensa-hifi.ko ${D}${base_libdir}/modules/
+    install ${WORKDIR}/fd-dsp-bin/fd-alsa-drv.ko ${D}${base_libdir}/modules/
    # Install DBus conf
     install -d ${D}${sysconfdir}/dbus-1/
-    install ${WORKDIR}/fd-dsp/etc/dbus-1/system-local.conf ${D}/${sysconfdir}/dbus-1/
+    install ${WORKDIR}/system-local.conf ${D}/${sysconfdir}/dbus-1/
    # Install executables and scripts
     install -d ${D}${bindir}
-    install ${WORKDIR}/fd-dsp/${bindir}/fd-dsp.sh ${D}/${bindir}/ 
-    install ${WORKDIR}/fd-dsp/${bindir}/_fd-dsp ${D}/${bindir}/
-    install ${WORKDIR}/fd-dsp/${bindir}/fd-dsp-ui.sh ${D}/${bindir}/
-    install ${WORKDIR}/fd-dsp/${bindir}/_fd-dsp-ui ${D}/${bindir}/
+    install ${WORKDIR}/fd-dsp.sh ${D}/${bindir}/ 
+    install ${WORKDIR}/fd-dsp-bin/_fd-dsp ${D}/${bindir}/
+    install ${WORKDIR}/fd-dsp-ui.sh ${D}/${bindir}/
+    install ${WORKDIR}/fd-dsp-bin/_fd-dsp-ui ${D}/${bindir}/
    # Install test executables and scripts
-    install ${WORKDIR}/fd-dsp/${bindir}/fd-dsp-test.sh ${D}/${bindir}/
-    install ${WORKDIR}/fd-dsp/${bindir}/pcm3168_start ${D}/${bindir}/
+    install ${WORKDIR}/fd-dsp-test.sh ${D}/${bindir}/
+    install ${WORKDIR}/fd-dsp-bin/pcm3168_start ${D}/${bindir}/
    # Install .wav files
     install -d ${D}/usr/share
-    install ${WORKDIR}/fd-dsp/usr/share/fd-dsp-test.wav ${D}/usr/share/
-    install ${WORKDIR}/fd-dsp/usr/share/fd-dsp-sweep.wav ${D}/usr/share/
+    install ${WORKDIR}/fd-dsp-bin/fd-dsp-test.wav ${D}/usr/share/
+    install ${WORKDIR}/fd-dsp-bin/fd-dsp-sweep.wav ${D}/usr/share/
    # Install .asoundrc for alsamixer
     install -d ${D}/home/root
-    install ${WORKDIR}/fd-dsp/home/root/.asoundrc ${D}/home/root/
+    install ${WORKDIR}/.asoundrc ${D}/home/root/
    # Install afm fd-dsp-ui.wgt
-    install ${WORKDIR}/fd-dsp/home/root/fd-dsp-ui.wgt ${D}/home/root/
+    install ${WORKDIR}/fd-dsp-bin/fd-dsp-ui.wgt ${D}/home/root/
    # Install systemd fd-dsp.service
     install -d ${D}/${base_libdir}/systemd/system
-    install ${WORKDIR}/fd-dsp/lib/systemd/system/fd-dsp.service ${D}/${base_libdir}/systemd/system/
+    install ${WORKDIR}/fd-dsp.service ${D}/${base_libdir}/systemd/system/
 
    # Create symlinks
     ln -s ${bindir}/fd-dsp.sh ${D}/${bindir}/fd-dsp
