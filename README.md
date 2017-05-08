@@ -1,52 +1,47 @@
--------------------------------------------------------------------------------------------
-Fiberdyne Yocto Layer Setup
--------------------------------------------------------------------------------------------
-
+## Fiberdyne Yocto Layer Setup
 This tutorial will guide you in setting up the meta-fiberdyne Yocto layer for the Poky 
-build environment under Automotive Grade Linux on the Renesas M2 Porter with Cogent expansion board pext01.
-For all purposes, the Yocto root directory will be referred to as $WORK.
+build environment for use with [AGL](https://www.automotivelinux.org/) on the Renesas M3 ULCB board.
+For all purposes, the Yocto root directory will be referred to as ``$WORK``.
 
--------------
-Setup
--------------
-1. Clone the "agl-pext01" branch of the meta-fiberdyne repository into $WORK/meta:
-
-   cd $WORK/meta
-   git clone https://github.com/fiberdyne/yocto-meta-fiberdyne.git --branch agl-pext01
-
-2. Locate your Yocto bblayers configuration file at $WORK/build/conf/bblayers.conf 
-   and add the following lines:
-
-       BBLAYERS_append = " ${METADIR}/../meta-fiberdyne"
-
-   Locate your Yocto local configuration file at $WORK/build/conf/local.conf
-   and add the following lines:
-    
-       IMAGE_INSTALL_append = " fd-dsp"
-
-3. Build your AGL image.
-
-4. Once your image is built, a modification will need to be made to the weston.ini file residing at:
-
-   /etc/xdg/weston/weston.ini
-   
-   Add the following lines to the file:
-  
+#### Setup
+------
+1. Make sure that [Git LFS](https://git-lfs.github.com/) is installed:
+   ```
+   $ sudo apt-get install git-lfs
+   ```
+2. Clone the "m3ulcb" branch of the meta-fiberdyne repository into `$WORK/meta`:
+   ```
+   $ cd $WORK/meta && git lfs clone https://github.com/fiberdyne/meta-fiberdyne.git --branch m3ulcb
+   ```
+3. Locate your Yocto `.bblayers` configuration file at `$WORK/build/conf/bblayers.conf` and add the following lines:
+   ```
+   BBLAYERS_append = " ${METADIR}/../meta-fiberdyne"
+   ```
+   Locate your Yocto local configuration file at `$WORK/build/conf/local.conf` and add the following lines:
+   ```
+   IMAGE_INSTALL_append = " fd-dsp"
+   ```
+4. Build your AGL image.
+5. Once your image is built, add the following lines to `/etc/xdg/weston/weston.ini`:
+   ```
    [launcher]
    icon=/usr/share/weston/icon_window.png
    path=/usr/bin/_fd-dsp-ui
-   
+   ```
    And change the shell variable to:
+   ```
    shell=desktop-shell.so
-
+   ```
    Then run:
-   systemctl restart weston
+   ```
+   $ systemctl restart weston
+   ```
 
    You will now have a launcher icon in the top left corner, and this is used to launch the fd-dsp UI.
 
-5. Reboot, and the fd-dsp daemon should be running. There should be audio coming from the LINE OUT auxillary.
+6. Reboot, and the fd-dsp` daemon should be running. There should be audio coming from the LINE OUT auxillary.
 
-6. Tap the icon to use the UI. If the UI does not alter the audio, REBOOT since the connection has failed.
+7. Tap the icon to use the UI. If the UI does not alter the audio, REBOOT since the connection has failed.
 
 [NOTE]
   It is possible to run the UI from the AGL HomeScreen, however there is currently a bug in it that prohibits
@@ -55,22 +50,15 @@ Setup
 [NOTE]
   This layer renders the AGL-netboot feature unusable, due to a conflict in reserved memory
 
-   
--------------------------------------------------------------------------------------------
-System Audio Info
+#### System Audio Info
 -------------------------------------------------------------------------------------------
 ALSA has been used to define three audio sinks that supports simultaneous playback 
 within multiple processes. 
 The underlying ALSA driver supports 48000 KHz sample rate only.
 
-1. sinkStereo 
-   Dual channel 32-bit input that emulates any stereo audio (i.e :- music)
-
-2. sinkTel 
-   Single channel 32-bit input for telephone audio
-  
-3. sinkPdc
-   Single channel 32-bit input for navigation audio and other mono audio sources
+1. `sinkStereo`     Dual channel 32-bit input that emulates any stereo audio (i.e :- music)
+2. `sinkTel`        Single channel 32-bit input for telephone audio
+3. `sinkPdc`        Single channel 32-bit input for navigation audio and other mono audio sources
 
 The test application fd-dsp-test uses the standard ALSA tool, aplay, to play stereo
 audio using sinkStereo. 
