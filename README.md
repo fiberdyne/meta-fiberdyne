@@ -76,4 +76,5 @@ The other subdevices can be tested via the same commands used in the test script
 
 
 Furthermore 'xf_audioplayer' application can be used as a reference to play PCM, AAC (ADTS only) and MP3 streams to subdevice 0.
-Note that the all streams are 48000KHz and no smaple rate conversion is provided.
+Note that the all streams are 48000KHz and no sample rate conversion is provided.
+Run xf_audioplayer without arguments for usage instructions.
