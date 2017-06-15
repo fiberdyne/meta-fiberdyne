@@ -1,0 +1,71 @@
+diff --git a/arch/arm64/boot/dts/renesas/r8a7796.dtsi b/arch/arm64/boot/dts/renesas/r8a7796.dtsi
+index 12fd574..c321318 100644
+--- a/arch/arm64/boot/dts/renesas/r8a7796.dtsi
++++ b/arch/arm64/boot/dts/renesas/r8a7796.dtsi
+@@ -45,6 +45,42 @@
+ 		tsc2 = &tsc3;
+ 	};
+ 
++	reserved-memory {
++		#address-cells = <2>;
++		#size-cells = <2>;
++		ranges;
++
++		/* device specific region for Lossy Decompression */
++		lossy_decompress: linux,lossy_decompress {
++			no-map;
++			reg = <0x00000000 0x54000000 0x0 0x03000000>;
++		};
++
++		/* global autoconfigured region for contiguous allocations */
++		linux,cma {
++			compatible = "shared-dma-pool";
++			reusable;
++			reg = <0x00000000 0x58000000 0x0 0x18000000>;
++			linux,cma-default;
++		};
++
++		/* For Audio DSP */
++		adsp_reserved: linux,adsp {
++                	compatible = "shared-dma-pool";
++                	reusable;
++                	reg = <0x00000000 0x57000000 0x0 0x01000000>;
++
++		};
++
++		/* device specific region for contiguous allocations */
++		mmp_reserved: linux,multimedia {
++			compatible = "shared-dma-pool";
++			reusable;
++			reg = <0x00000000 0x70000000 0x0 0x10000000>;
++		};
++
++	};
++
+ 	psci {
+ 		compatible = "arm,psci-1.0";
+ 		method = "smc";
+@@ -780,7 +816,7 @@
+ 			reg = <0 0xec670000 0 0x1000>; /* IPMMU-MP0 */
+ 			renesas,ipmmu-main = <&ipmmu_mm 4>;
+ 			#iommu-cells = <1>;
+-			status = "disabled";
++			status = "disabled"; 
+ 		};
+ 
+ 		ipmmu_ds0: mmu@e6740000 {
+@@ -2376,9 +2412,12 @@
+ 				      "src.9", "src.8", "src.7", "src.6",
+ 				      "src.5", "src.4", "src.3", "src.2",
+ 				      "src.1", "src.0",
+-				      "dvc.0", "dvc.1";
++				      "dvc.0", "dvc.1",
++				      "audmac.0", "audmac.1",
++	                              "adg";
+ 			power-domains = <&sysc R8A7796_PD_ALWAYS_ON>;
+-			status = "disabled";
++			memory-region = <&adsp_reserved>;
++			status = "okay";
+ 		};
+ 
+ 		gsx: gsx@fd000000 {

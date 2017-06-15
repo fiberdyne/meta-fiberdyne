@@ -23,11 +23,10 @@ do_compile[noexec] = "1"
 do_install () {
    # Install firmware
     install -d ${D}${base_libdir}/firmware/
-    install ${WORKDIR}/fd-dsp-bin/xf-m2.fw ${D}${base_libdir}/firmware/
+    install ${WORKDIR}/fd-dsp-bin/xf-rcar.fw ${D}${base_libdir}/firmware/
    # Install kernel modules
     install -d ${D}${base_libdir}/modules/
     install ${WORKDIR}/fd-dsp-bin/fd-xtensa-hifi.ko ${D}${base_libdir}/modules/
-    install ${WORKDIR}/fd-dsp-bin/fd-alsa-drv.ko ${D}${base_libdir}/modules/
    # Install DBus conf
     install -d ${D}${sysconfdir}/dbus-1/
     install ${WORKDIR}/system-local.conf ${D}/${sysconfdir}/dbus-1/
@@ -44,20 +43,17 @@ do_install () {
     install -d ${D}/usr/share
     install ${WORKDIR}/fd-dsp-bin/fd-dsp-test.wav ${D}/usr/share/
     install ${WORKDIR}/fd-dsp-bin/fd-dsp-sweep.wav ${D}/usr/share/
-   # Install .asoundrc for alsamixer
-    install -d ${D}/home/root
-    install ${WORKDIR}/.asoundrc ${D}/home/root/
+   # Install Audio player
+    install ${WORKDIR}/fd-dsp-bin/xf_audioplayer  ${D}/${bindir}/
    # Install afm fd-dsp-ui.wgt
     install ${WORKDIR}/fd-dsp-bin/fd-dsp-ui.wgt ${D}/home/root/
    # Install systemd fd-dsp.service
     install -d ${D}/${base_libdir}/systemd/system
     install ${WORKDIR}/fd-dsp.service ${D}/${base_libdir}/systemd/system/
-
    # Create symlinks
     ln -s ${bindir}/fd-dsp.sh ${D}/${bindir}/fd-dsp
     ln -s ${bindir}/fd-dsp-ui.sh ${D}/${bindir}/fd-dsp-ui
     ln -s ${bindir}/fd-dsp-test.sh ${D}/${bindir}/fd-dsp-test
-    
    # Create symlinks to fd-dsp.service
     install -d ${D}/${sysconfdir}/systemd/system/default.target.wants
     ln -s ${base_libdir}/systemd/system/fd-dsp.service ${D}/${sysconfdir}/systemd/system/default.target.wants/
@@ -65,9 +61,8 @@ do_install () {
 
 # Package the installed files
 FILES_${PN} = " \
-    ${base_libdir}/firmware/xf-m2.fw \
+    ${base_libdir}/firmware/xf-rcar.fw \
     ${base_libdir}/modules/fd-xtensa-hifi.ko \
-    ${base_libdir}/modules/fd-alsa-drv.ko \
     ${base_libdir}/systemd/system/fd-dsp.service \
     ${sysconfdir}/systemd/system/default.target.wants/fd-dsp.service \
     ${sysconfdir}/dbus-1/system-local.conf \
@@ -79,11 +74,11 @@ FILES_${PN} = " \
     ${bindir}/_fd-dsp-ui \
     ${bindir}/fd-dsp-test \
     ${bindir}/fd-dsp-test.sh \
+    ${bindir}/xf_audioplayer \
     ${bindir}/pcm3168_start \
     /usr/share/fd-dsp-test.wav \
     /usr/share/fd-dsp-sweep.wav \
     /home/root/fd-dsp-ui.wgt \
-    /home/root/.asoundrc \
     "
 
 # Runtime dependencies

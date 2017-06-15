@@ -6,9 +6,17 @@ For all purposes, the Yocto root directory will be referred to as ``$WORK``.
 #### Setup
 ------
 1. Make sure that [Git LFS](https://git-lfs.github.com/) is installed:
+
+   ```
+   $ sudo add-apt-repository ppa:git-core/ppa
+   ```
+   ```
+   $ curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.deb.sh | sudo bash
+   ```
    ```
    $ sudo apt-get install git-lfs
    ```
+   
 2. Clone the "m3ulcb" branch of the meta-fiberdyne repository into `$WORK/meta`:
    ```
    $ cd $WORK/meta && git lfs clone https://github.com/fiberdyne/meta-fiberdyne.git --branch m3ulcb
@@ -52,14 +60,20 @@ For all purposes, the Yocto root directory will be referred to as ``$WORK``.
 
 #### System Audio Info
 -------------------------------------------------------------------------------------------
-ALSA has been used to define three audio sinks that supports simultaneous playback 
+ALSA has been used to define three audio subdevices that supports simultaneous playback 
 within multiple processes. 
+The streams are mixed inside the ADSP core. 
+
 The underlying ALSA driver supports 48000 KHz sample rate only.
 
-1. `sinkStereo`     Dual channel 32-bit input that emulates any stereo audio (i.e :- music)
-2. `sinkTel`        Single channel 32-bit input for telephone audio
-3. `sinkPdc`        Single channel 32-bit input for navigation audio and other mono audio sources
+1. Subdevice 0 :     Dual channel 16-bit input
+2. Subdevice 1 :     Single channel 16-bit input
+3. Subdevice 2 :     Single channel 16-bit input 
 
 The test application fd-dsp-test uses the standard ALSA tool, aplay, to play stereo
-audio using sinkStereo. 
-The other sinks can be tested via the same commands used in the test script. 
+audio using subdevice 0. 
+The other subdevices can be tested via the same commands used in the test script. 
+
+
+Furthermore 'xf_audioplayer' application can be used as a reference to play PCM, AAC (ADTS only) and MP3 streams to subdevice 0.
+Note that the all streams are 48000KHz and no smaple rate conversion is provided.
