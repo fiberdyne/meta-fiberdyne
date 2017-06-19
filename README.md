@@ -54,9 +54,6 @@ For all purposes, the Yocto root directory will be referred to as ``$WORK``.
 [NOTE]
   It is possible to run the UI from the AGL HomeScreen, however there is currently a bug in it that prohibits
   aour package to be installed.  This will come in future updates.
-  
-[NOTE]
-  This layer renders the AGL-netboot feature unusable, due to a conflict in reserved memory
 
 #### System Audio Info
 -------------------------------------------------------------------------------------------
