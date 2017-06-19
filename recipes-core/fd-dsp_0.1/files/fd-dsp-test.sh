@@ -1,6 +1,6 @@
 # Test direct into hardware buffer sink, avoiding mixer
-ak41_start &
+pcm3168_start &
 
 while true; do
-  aplay -Dplug:sinkStereo -c2 -fS16_LE /usr/share/fd-dsp-test.wav
+  aplay -D hw:1,0,0 -c2 -fS16_LE /usr/share/fd-dsp-test.wav
 done
