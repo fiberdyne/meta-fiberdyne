@@ -46,6 +46,7 @@ do_install () {
    # Install Audio player
     install ${WORKDIR}/fd-dsp-bin/xf_audioplayer  ${D}/${bindir}/
    # Install afm fd-dsp-ui.wgt
+    install -d ${D}/home/root
     install ${WORKDIR}/fd-dsp-bin/fd-dsp-ui.wgt ${D}/home/root/
    # Install systemd fd-dsp.service
     install -d ${D}/${base_libdir}/systemd/system
