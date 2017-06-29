@@ -21,11 +21,11 @@ For all purposes, the Yocto root directory will be referred to as ``$WORK``.
    ```
    $ cd $WORK/meta && git lfs clone https://github.com/fiberdyne/meta-fiberdyne.git --branch m3ulcb
    ```
-3. Locate your Yocto `.bblayers` configuration file at `$WORK/build/conf/bblayers.conf` and add the following lines:
+3. Locate your Yocto `bblayers` configuration file at `$WORK/build/conf/bblayers.conf` and add the following lines:
    ```
    BBLAYERS_append = " ${METADIR}/../meta-fiberdyne"
    ```
-   Locate your Yocto local configuration file at `$WORK/build/conf/local.conf` and add the following lines:
+   Locate your Yocto `local` configuration file at `$WORK/build/conf/local.conf` and add the following lines:
    ```
    IMAGE_INSTALL_append = " fd-dsp"
    ```
@@ -47,7 +47,7 @@ For all purposes, the Yocto root directory will be referred to as ``$WORK``.
 
    You will now have a launcher icon in the top left corner, and this is used to launch the fd-dsp UI.
 
-6. Reboot, and the fd-dsp` daemon should be running. There should be audio coming from the LINE OUT auxillary.
+6. Reboot, and the fd-dsp daemon should be running. There should be audio coming from the LINE OUT auxillary.
 
 7. Tap the icon to use the UI. If the UI does not alter the audio, REBOOT since the connection has failed.
 
