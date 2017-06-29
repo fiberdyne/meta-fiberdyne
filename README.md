@@ -1,27 +1,25 @@
 ## Fiberdyne Yocto Layer Setup
 This tutorial will guide you in setting up the meta-fiberdyne Yocto layer for the Poky 
-build environment for use with [AGL](https://www.automotivelinux.org/) on the Renesas M3 ULCB board.
+build environment for use with [AGL](https://www.automotivelinux.org/) on the Renesas M3 ULCB platform.
 For all purposes, the Yocto root directory will be referred to as ``$WORK``.
 
 #### Setup
 ------
-1. Make sure that [Git LFS](https://git-lfs.github.com/) is installed:
+You can include the layer in your Yocto project in one of two ways:
 
-   ```
-   $ sudo add-apt-repository ppa:git-core/ppa
-   ```
-   ```
-   $ curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.deb.sh | sudo bash
-   ```
-   ```
-   $ sudo apt-get install git-lfs
-   ```
-   
-2. Clone the "m3ulcb" branch of the meta-fiberdyne repository into `$WORK/meta`:
+##### Install from release
+Download the latest release archive from [Releases](https://github.com/fiberdyne/meta-fiberdyne/releases), and extract to `$WORK/meta/meta-fiberdyne`
+#### OR
+##### Clone from repository
+Make sure that [Git LFS](https://git-lfs.github.com/) is installed on your computer.
+Clone the "m3ulcb" branch of the meta-fiberdyne repository into `$WORK/meta`:
    ```
    $ cd $WORK/meta && git lfs clone https://github.com/fiberdyne/meta-fiberdyne.git --branch m3ulcb
    ```
-3. Locate your Yocto `bblayers` configuration file at `$WORK/build/conf/bblayers.conf` and add the following lines:
+
+Now we must build it in to Yocto:
+##### Building
+Locate your Yocto `bblayers` configuration file at `$WORK/build/conf/bblayers.conf` and add the following lines:
    ```
    BBLAYERS_append = " ${METADIR}/../meta-fiberdyne"
    ```
@@ -29,8 +27,12 @@ For all purposes, the Yocto root directory will be referred to as ``$WORK``.
    ```
    IMAGE_INSTALL_append = " fd-dsp"
    ```
-4. Build your AGL image.
-5. Once your image is built, add the following lines to `/etc/xdg/weston/weston.ini`:
+Build your AGL image.
+
+##### Running
+Once your image is built you can boot it either via SD card, or using a netboot scheme.  See [here](http://docs.automotivelinux.org/docs/getting_started/en/dev/reference/machines/R-Car-Starter-Kit-gen3.html) for more information on booting AGL images.
+
+Once you have booted to AGL, some modifications need to be made.  Add the following lines to `/etc/xdg/weston/weston.ini`:
    ```
    [launcher]
    icon=/usr/share/weston/icon_window.png
@@ -47,9 +49,9 @@ For all purposes, the Yocto root directory will be referred to as ``$WORK``.
 
    You will now have a launcher icon in the top left corner, and this is used to launch the fd-dsp UI.
 
-6. Reboot, and the fd-dsp daemon should be running. There should be audio coming from the LINE OUT auxillary.
+Reboot, and the `fd-dsp` daemon should be running. There should be audio coming from the LINE OUT auxillary.
 
-7. Tap the icon to use the UI. If the UI does not alter the audio, REBOOT since the connection has failed.
+Tap the icon to use the UI. If the UI does not alter the audio, REBOOT since the connection has failed.
 
 [NOTE]
   It is possible to run the UI from the AGL HomeScreen, however there is currently a bug in it that prohibits
