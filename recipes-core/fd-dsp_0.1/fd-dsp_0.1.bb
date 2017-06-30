@@ -10,7 +10,6 @@ SRC_URI = "file://fd-dsp-bin.tar.gz \
            file://fd-dsp.sh \
            file://fd-dsp-ui.sh \
            file://fd-dsp-test.sh \
-           file://.asoundrc \
            file://fd-dsp.service \
            "
 
