@@ -1,0 +1,10 @@
+[Unit]
+Description=Fiberdyne DSP PulseAudio Plugin
+After=fd-dsp.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/fd-dsp-pulse
+
+[Install]
+WantedBy=default.target
