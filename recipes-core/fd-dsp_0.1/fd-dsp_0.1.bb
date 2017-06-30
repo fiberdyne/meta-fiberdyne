@@ -37,7 +37,7 @@ do_install () {
     install ${WORKDIR}/fd-dsp-bin/_fd-dsp-ui ${D}/${bindir}/
    # Install test executables and scripts
     install ${WORKDIR}/fd-dsp-test.sh ${D}/${bindir}/
-    install ${WORKDIR}/fd-dsp-bin/pcm3168_start ${D}/${bindir}/
+    install ${WORKDIR}/fd-dsp-bin/ak4613_start ${D}/${bindir}/
    # Install .wav files
     install -d ${D}/usr/share
     install ${WORKDIR}/fd-dsp-bin/fd-dsp-test.wav ${D}/usr/share/
@@ -75,7 +75,7 @@ FILES_${PN} = " \
     ${bindir}/fd-dsp-test \
     ${bindir}/fd-dsp-test.sh \
     ${bindir}/xf_audioplayer \
-    ${bindir}/pcm3168_start \
+    ${bindir}/ak4613_start \
     /usr/share/fd-dsp-test.wav \
     /usr/share/fd-dsp-sweep.wav \
     /home/root/fd-dsp-ui.wgt \
