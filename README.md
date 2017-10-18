@@ -62,7 +62,7 @@ ALSA has been used to define three audio subdevices that supports simultaneous p
 within multiple processes. The streams are mixed inside the ADSP core. 
 
 ##### ALSA
-The underlying [ALSA](https://www.alsa-project.org/main/index.php/Main_Page) driver supports 48000 KHz sample rate only. The subdevices are:
+The underlying [ALSA](https://www.alsa-project.org/main/index.php/Main_Page) driver supports 48000 Hz sample rate only. The subdevices are:
 
 |_Subdevice_|           _Description_            | _ALSA Subdevice_ |
 |:---------:|------------------------------------|:----------------:|
@@ -112,7 +112,7 @@ $ gst-play-1.0 audiofile.wav ! pulsesink
 ##### Codecs
 The `xf_audioplayer` application can be used as a reference to play PCM, AAC (ADTS only), and MP3 streams to subdevice 0, with decoding performed on the ADSP core. For example, to play an MP3 file:
 ```sh
-$ xf_audioplayer hw:1,0,0 audiofile.mp3 mp3
+$ xf_audioplayer hw:1,0 audiofile.mp3 mp3
 ```
 Note that the all streams are 48000Hz and no sample rate conversion is provided.
 Run `xf_audioplayer` without arguments for usage instructions.
