@@ -4,13 +4,9 @@ This is the Yocto meta layer for the Fiberdyne DSP, for use with [Automotive Gra
 ## Setup
 __NOTE__: For all purposes, the Yocto build root directory will be referred to as `$WORK`.
 
-You can include the layer in your Yocto project in one of two ways:
-
-### Install from release
-Download the latest release archive from [Releases](https://github.com/fiberdyne/meta-fiberdyne/releases), and extract to `$WORK/meta/meta-fiberdyne`
-### OR
 ### Clone from repository
-Make sure that [Git LFS](https://git-lfs.github.com/) is installed on your computer.
+Since [Git LFS](https://git-lfs.github.com/) is being used, we must clone the layer.
+
 Clone the meta-fiberdyne repository into `$WORK/meta` using Git LFS:
 ```sh
 $ cd $WORK/meta && git lfs clone https://github.com/fiberdyne/meta-fiberdyne.git
